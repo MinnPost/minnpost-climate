@@ -1,0 +1,65 @@
+{
+  "requirejs": {
+    "rname": "requirejs",
+    "js": [
+      "requirejs/require"
+    ]
+  },
+  "text": {
+    "rname": "text",
+    "js": [
+      "text/text"
+    ]
+  },
+  "jquery": {
+    "rname": "jquery",
+    "js": [
+      "jquery/jquery.min"
+    ],
+    "returns": "$"
+  },
+  "underscore": {
+    "rname": "underscore",
+    "js": [
+      "underscore/underscore-min"
+    ],
+    "returns": "_"
+  },
+  "backbone": {
+    "rname": "Backbone",
+    "js": [
+      "backbone/backbone-min"
+    ],
+    "returns": "Backbone"
+  },
+  "ractive": {
+    "rname": "Ractive",
+    "js": [
+      "ractive/build/Ractive-legacy.min"
+    ],
+    "returns": "Ractive"
+  },
+  "ractive-backbone": {
+    "rname": "Ractive-Backbone",
+    "js": [
+      "ractive-backbone/Ractive-Backbone.min"
+    ],
+    "returns": "RactiveBackbone"
+  },
+  "ractive-events-tap": {
+    "rname": "Ractive-events-tap",
+    "js": [
+      "ractive-events-tap/Ractive-events-tap.min"
+    ],
+    "returns": "RactiveEventsTap"
+  },
+  "unsemantic": {
+    "css": [
+      "unsemantic/assets/stylesheets/unsemantic-grid-responsive-tablet"
+    ],
+    "ie": [
+      "unsemantic/assets/stylesheets/ie"
+    ],
+    "rname": "unsemantic"
+  }
+}
