@@ -13,6 +13,8 @@
     "email": "data@minnpost.com"
   },
   "dependencies": {
+    "request": "~2.34.0",
+    "lodash": "~2.4.1"
   },
   "devDependencies": {
     "grunt": "~0.4.1",
