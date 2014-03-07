@@ -71,10 +71,16 @@
   },
   "highcharts": {
     "js": [
-      "highcharts/highcharts",
-      "highcharts/highcharts-more"
+      "highcharts/highcharts"
     ],
     "rname": "Highcharts",
     "returns": "Highcharts"
+  },
+  "highcharts": {
+    "js": [
+      "highcharts/highcharts-more"
+    ],
+    "rname": "HighchartsMore",
+    "returns": "HighchartsMore"
   }
 }

@@ -38,6 +38,9 @@ define('minnpost-climate', [
       this.today = moment(this.now.format('YYYY-MM-DD'));
       this.year = this.now.year();
 
+      // Determine season
+      this.determineSeason();
+
       // We can store all the data in an array of days
       this.days = {};
 
@@ -142,6 +145,44 @@ define('minnpost-climate', [
           }
         ]
       }));
+
+      // Season
+      this.$el.find('.chart-section-season').highcharts(_.extend({}, options, {
+        series: [
+          {
+            name: 'Observed temperature',
+            type: 'line',
+            color: '#1D71A5',
+            zIndex: 100,
+            data: this.chartData(this.sectionSeason.days, 'temp')
+          },
+          {
+            name: 'Average',
+            type: 'line',
+            color: '#1DA595',
+            zIndex: 50,
+            data: this.chartData(this.sectionSeason.days, 'navg')
+          },
+          {
+            name: 'Average high and low',
+            color: '#1DA595',
+            type: 'arearange',
+            fillOpacity: 0.3,
+            zIndex: 0,
+            lineWidth: 0,
+            data: this.chartData(this.sectionSeason.days, ['nmin', 'nmax'])
+          },
+          {
+            name: 'Observed high and low',
+            color: '#1D71A5',
+            type: 'arearange',
+            fillOpacity: 0.3,
+            zIndex: 10,
+            lineWidth: 0,
+            data: this.chartData(this.sectionSeason.days, ['temp_min', 'temp_max'])
+          }
+        ]
+      }));
     },
 
     // Make sections
@@ -171,10 +212,20 @@ define('minnpost-climate', [
         }), function(d, di) { return d.date.unix(); })
       );
 
+      // Season
+      this.sectionSeason = this.computeSection(
+          _.sortBy(_.filter(this.days, function(d, di) {
+          return ((d.date.isAfter(thisApp.options.seasons[thisApp.season].start) ||
+            d.date.isSame(thisApp.options.seasons[thisApp.season].start)) &&
+            d.date.isBefore(thisApp.options.seasons[thisApp.season].end));
+        }), function(d, di) { return d.date.unix(); })
+      );
+
       // Attach to view
       this.view.set('sectionToday', this.sectionToday);
       this.view.set('sectionWeek', this.sectionWeek);
       this.view.set('sectionMonth', this.sectionMonth);
+      this.view.set('sectionSeason', this.sectionSeason);
 
       // Mark as computer
       this.view.set('computed', true);
@@ -234,12 +285,28 @@ define('minnpost-climate', [
       return $.getJSON(url).done(function(data) {
         _.each(data, function(d, di) {
           var id;
-          d.date = moment(d.date);
+          d.date = moment(d.date, 'YYYY-MM-DD');
           id = thisApp.idFromDate(d.date);
 
           thisApp.days[id] = thisApp.days[id] || {};
           _.extend(thisApp.days[id], d);
         });
+      });
+    },
+
+    // Determine what season we are in
+    determineSeason: function() {
+      var thisApp = this;
+
+      // Adjust the season years
+      // TODO
+
+      _.each(this.options.seasons, function(s, si) {
+        if ((thisApp.today.isAfter(s.start) ||
+          thisApp.today.isSame(s.start)) &&
+          thisApp.today.isBefore(s.end)) {
+          thisApp.season = si;
+        }
       });
     },
 
@@ -263,9 +330,9 @@ define('minnpost-climate', [
     dateFromMonthDay: function(m, d) {
       // We have to determine if the month and day is this
       // year or last
-      var date = moment([this.year, m, d]);
+      var date = moment([this.year, m - 1, d]);
       var year = date.isAfter(this.now) ? this.year - 1 : this.year;
-      return moment([year, m, d]);
+      return moment([year, m - 1, d]);
     },
 
     // Create id from date
@@ -276,6 +343,25 @@ define('minnpost-climate', [
     // Default options
     defaultOptions: {
       dailyObservationsPath: 'https://premium.scraperwiki.com/bd5okny/ec1140c12061447/sql/?callback=?&q=[[[QUERY]]]',
+      seasons: {
+        // Start is inclusive
+        winter: {
+          start: moment('2013-12-01', 'YYYY-MM-DD'),
+          end: moment('2014-04-01', 'YYYY-MM-DD')
+        },
+        spring: {
+          start: moment('2014-04-01', 'YYYY-MM-DD'),
+          end: moment('2014-06-21', 'YYYY-MM-DD')
+        },
+        summer: {
+          start: moment('2014-06-21', 'YYYY-MM-DD'),
+          end: moment('2014-09-21', 'YYYY-MM-DD')
+        },
+        fall: {
+          start: moment('2014-09-21', 'YYYY-MM-DD'),
+          end: moment('2014-12-1', 'YYYY-MM-DD')
+        }
+      },
       chartOptions: {
         chart: {
           style: {

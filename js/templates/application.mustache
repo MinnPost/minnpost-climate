@@ -28,6 +28,14 @@
     <div class="chart chart-section-month"></div>
   {{/sectionMonth.avgTempDiff}}
 
+  <h3>This season</h3>
+
+  {{#sectionSeason.avgTempDiff}}
+    <p>This past month (30 days) is about {{ Math.round(sectionSeason.totalTempDiff * 100) / 100 }}&deg;F degrees colder than the average in total and about {{ Math.round(sectionSeason.avgTempDiff * 100) / 100 }}&deg;F colder on average each day.</p>
+
+    <div class="chart chart-section-season"></div>
+  {{/sectionSeason.avgTempDiff}}
+
 </div>
 
 <div class="footnote-container">
