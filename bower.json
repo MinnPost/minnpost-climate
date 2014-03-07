@@ -22,7 +22,7 @@
     "ractive-events-tap": "~0.1.0",
     "unsemantic": "*",
     "requirejs": "~2.1.9",
-    "text": "~2.0.10"
+    "text": "~2.0.10",
+    "moment": "~2.5.1"
   }
 }
-

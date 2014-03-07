@@ -10,11 +10,6 @@ require.config({
     'Backbone': {
       deps: ['underscore', 'jquery'],
       exports: 'Backbone'
-    },
-    // Mapbox and requireJS don't really work, so we just let
-    // the L be global
-    'mapbox': {
-      exports: 'mapbox'
     }
   },
   baseUrl: 'js',
@@ -22,6 +17,7 @@ require.config({
     'requirejs': '../bower_components/requirejs/require',
     'text': '../bower_components/text/text',
     'jquery': '../bower_components/jquery/jquery.min',
+    'moment': '../bower_components/moment/min/moment.min',
     'underscore': '../bower_components/underscore/underscore-min',
     'Backbone': '../bower_components/backbone/backbone-min',
     'Ractive': '../bower_components/ractive/build/Ractive-legacy.min',

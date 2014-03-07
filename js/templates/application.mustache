@@ -2,17 +2,37 @@
 
 <div class="content-container">
 
-  <h3>MinnPost Climate</h3>
-
-  {{^noData}}
+  {{^computed}}
     {{>loading}}
-  {{/noData}}
+  {{/computed}}
+
+  <h3>Today</h3>
+
+  {{#sectionToday.avgTempDiff}}
+    <p>Today is about {{ Math.round(sectionToday.avgTempDiff * 100) / 100 }}&deg;F different than the normal {{ sectionToday.days.0.navg }}&deg;F.</p>
+  {{/sectionToday.avgTempDiff}}
+
+  <h3>Last week</h3>
+
+  {{#sectionWeek.avgTempDiff}}
+    <p>Today is about {{ Math.round(sectionWeek.avgTempDiff * 100) / 100 }}&deg;F different than the normal.</p>
+
+    <div class="chart chart-section-week"></div>
+  {{/sectionWeek.avgTempDiff}}
+
+  <h3>Last month</h3>
+
+  {{#sectionMonth.avgTempDiff}}
+    <p>Today is about {{ Math.round(sectionMonth.avgTempDiff * 100) / 100 }}&deg;F different than the normal.</p>
+
+    <div class="chart chart-section-month"></div>
+  {{/sectionMonth.avgTempDiff}}
 
 </div>
 
 <div class="footnote-container">
   <div class="footnote">
-    <p>Some code, techniques, and data on <a href="https://github.com/zzolo/minnpost-climate" target="_blank">Github</a>.</p>
-    
+    <p>Some code, techniques, and data on <a href="https://github.com/minnpost/minnpost-climate" target="_blank">Github</a>.</p>
+
   </div>
 </div>
