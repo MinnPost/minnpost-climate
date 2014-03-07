@@ -6,7 +6,19 @@ A running look at local, current weather against historical climate patterns.
 
 ## Data
 
-Weather data provided by [hamweather.com](http://www.hamweather.com/).
+Two main sources are used for this application.
+
+* [NOAA Climatological Normals](http://www.ncdc.noaa.gov/oa/climate/normals/usnormals.html) (1981-2010): "Climate Normals are the latest three-decade averages of climatological variables, including temperature and precipitation."
+    * [What are Normals](http://www.ncdc.noaa.gov/oa/climate/normals/usnormals.html#WHATARENORMALS).
+    * [Use of Normals](http://www.ncdc.noaa.gov/oa/climate/normals/usnormals.html#NORMALSUSAGE).  "Meteorologists and climatologists regularly use Normals for placing recent climate conditions into a historical context."
+* [Global Surface Summary of Day](http://www.ncdc.noaa.gov/cgi-bin/res40.pl) (GSOD) which is a global collection of recorded conditions each day.
+
+## Data processing
+
+* For the Normals, this data does not get updated (except each decade), so we store locally and use directly in application.  Run the following to download and parse the Normals data:
+    * `node data-processing/station-normals.js`
+    * This will create files in the `data` directory like `data/[[[STATION]]]-daily.json`.
+* For the historical GSOD data, we need to update this daily, so we use [ScraperWiki](https://scraperwiki.com/) to process the data and create an API.  A (not-guaranteed to be up-to-date) copy of the scraper can be found in `data-processing/daily-observations-scraperwiki.py`.
 
 ## Development and running locally
 
