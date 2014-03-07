@@ -21,27 +21,23 @@ var normalsURL = 'http://www1.ncdc.noaa.gov/pub/data/normals/1981-2010/products/
 var prettyJSON = false;
 var dataPath = path.join(__dirname, '../data/');
 
-// Go through stations
-stations.forEach(function(s, si) {
-  getStation(s);
-});
 
-// Get station
-function getStation(id) {
-  var url = normalsURL.replace('[[[STATION]]]', id);
 
-  // Download data
-  request(url, function(error, response, body) {
-    if (!error && response.statusCode == 200) {
-      body = body.split('\n');
 
-      processStation(body, id);
-      processDaily(body, id);
+// Write out file
+function writeJSON(data, filename) {
+  var content = (prettyJSON) ? JSON.stringify(data, null, 2) :
+    JSON.stringify(data);
+  filename = path.join(dataPath, filename);
+
+  fs.writeFile(filename, content, function(error) {
+    if (error) {
+      console.error('Error writing file: ' + filename);
     }
     else {
-      console.error('Error with fetching station: ' + id);
+      console.log('Data saved to: ' + filename);
     }
-  })
+  });
 }
 
 // Get station data
@@ -56,34 +52,32 @@ function processStation(lines, station) {
   writeJSON(stationData, station + '-station.json');
 }
 
-// Get yearly data
-function processYearly(lines, station) {
+// Read daily line
+function readDailyLine(line) {
+  var firstValue = 20;
+  var increment = 7;
+  var parsed = [];
+  var i, value;
 
-}
+  for (i = firstValue; i < line.length; i = i + increment) {
+    value = line.slice(i, i + increment);
+    value = value.trim();
+    value = (value === '-7777') ? '0' : value;
+    value = value.replace(/[A-Z]/g, '');
+    // Because the way operations with floats in JS works,
+    // we keep the integer value, then output as decimal
+    value = parseInt(value, 10);
 
-// Get monthly data
-function processMonthly(lines, station) {
+    // Normal value
+    if (value > -1000) {
+      parsed.push(value);
+    }
+    else if (value === -9999) {
+      parsed.push(null);
+    }
+  }
 
-}
-
-// Get daily
-function processDaily(lines, station) {
-  var tempSections = ['dly-tmax-normal', 'dly-tmin-normal', 'dly-tavg-normal', 'dly-dutr-normal'];
-  var precipSections = ['mtd-prcp-normal'];
-  var snowSections = ['mtd-snow-normal'];
-  var daily = {};
-
-  tempSections.forEach(function(s, si) {
-    daily[s] = readDailySection(s, lines, 'temp');
-  });
-  precipSections.forEach(function(s, si) {
-    daily[s] = readDailySection(s, lines, 'precip');
-  });
-  snowSections.forEach(function(s, si) {
-    daily[s] = readDailySection(s, lines, 'snow');
-  });
-
-  writeJSON(daily, station + '-daily.json');
+  return parsed;
 }
 
 // Read specific daily section
@@ -134,46 +128,55 @@ function readDailySection(section, lines, type) {
   return data;
 }
 
-// Read daily line
-function readDailyLine(line) {
-  var firstValue = 20;
-  var increment = 7;
-  var parsed = [];
-  var i, value;
+// Get yearly data
+function processYearly(lines, station) {
 
-  for (i = firstValue; i < line.length; i = i + increment) {
-    value = line.slice(i, i + increment);
-    value = value.trim();
-    value = (value === '-7777') ? '0' : value;
-    value = value.replace(/[A-Z]/g, '');
-    // Because the way operations with floats in JS works,
-    // we keep the integer value, then output as decimal
-    value = parseInt(value);
-
-    // Normal value
-    if (value > -1000) {
-      parsed.push(value);
-    }
-    else if (value === -9999) {
-      parsed.push(null);
-    }
-  }
-
-  return parsed;
 }
 
-// Write out file
-function writeJSON(data, filename) {
-  var content = (prettyJSON) ? JSON.stringify(data, null, 2) :
-    JSON.stringify(data);
-  filename = path.join(dataPath, filename);
+// Get monthly data
+function processMonthly(lines, station) {
 
-  fs.writeFile(filename, content, function(error) {
-    if (error) {
-      console.error('Error writing file: ' + filename);
+}
+
+// Get daily
+function processDaily(lines, station) {
+  var tempSections = ['dly-tmax-normal', 'dly-tmin-normal', 'dly-tavg-normal', 'dly-dutr-normal'];
+  var precipSections = ['mtd-prcp-normal'];
+  var snowSections = ['mtd-snow-normal'];
+  var daily = {};
+
+  tempSections.forEach(function(s, si) {
+    daily[s] = readDailySection(s, lines, 'temp');
+  });
+  precipSections.forEach(function(s, si) {
+    daily[s] = readDailySection(s, lines, 'precip');
+  });
+  snowSections.forEach(function(s, si) {
+    daily[s] = readDailySection(s, lines, 'snow');
+  });
+
+  writeJSON(daily, station + '-daily.json');
+}
+
+// Get station
+function getStation(id) {
+  var url = normalsURL.replace('[[[STATION]]]', id);
+
+  // Download data
+  request(url, function(error, response, body) {
+    if (!error && response.statusCode == 200) {
+      body = body.split('\n');
+
+      processStation(body, id);
+      processDaily(body, id);
     }
     else {
-      console.log('Data saved to: ' + filename);
+      console.error('Error with fetching station: ' + id);
     }
   });
 }
+
+// Go through stations
+stations.forEach(function(s, si) {
+  getStation(s);
+});
