@@ -7,13 +7,14 @@
 define('minnpost-climate', [
   'underscore', 'jquery', 'moment',
   'Ractive', 'Ractive-events-tap',
+  'Highcharts', 'HighchartsMore',
   'helpers',
   'text!templates/loading.mustache',
   'text!templates/application.mustache',
   'text!../data/USW00014922-station.json',
   'text!../data/USW00014922-daily.json'
 ],
-  function(_, $, moment, Ractive, R1, helpers, tLoading, tApp, dataMplsStation, dataMplsDaily) {
+  function(_, $, moment, Ractive, R1, Highcharts, H1, helpers, tLoading, tApp, dataMplsStation, dataMplsDaily) {
 
   // Read in data
   dataMplsStation = JSON.parse(dataMplsStation);
@@ -51,10 +52,96 @@ define('minnpost-climate', [
         }
       });
 
+      // Respond to view events
+      this.view.observe('computed', function(n, o) {
+        this.drawCharts();
+      }, { init: false, defer: true, context: this });
+
       // Parse daily normals
       this.parseNormals(dataMplsDaily);
       // Get recent observations
       this.fetchRecentObservations().done(_.bind(this.createSections, this));
+    },
+
+    // Draw charts
+    drawCharts: function() {
+      var options = _.clone(this.options.chartOptions);
+
+      // Week
+      this.$el.find('.chart-section-week').highcharts(_.extend({}, options, {
+        series: [
+          {
+            name: 'Observed temperature',
+            type: 'line',
+            color: '#1D71A5',
+            zIndex: 100,
+            data: this.chartData(this.sectionWeek.days, 'temp')
+          },
+          {
+            name: 'Average',
+            type: 'line',
+            color: '#1DA595',
+            zIndex: 50,
+            data: this.chartData(this.sectionWeek.days, 'navg')
+          },
+          {
+            name: 'Average high and low',
+            color: '#1DA595',
+            type: 'arearange',
+            fillOpacity: 0.3,
+            zIndex: 0,
+            lineWidth: 0,
+            data: this.chartData(this.sectionWeek.days, ['nmin', 'nmax'])
+          },
+          {
+            name: 'Observed high and low',
+            color: '#1D71A5',
+            type: 'arearange',
+            fillOpacity: 0.3,
+            zIndex: 10,
+            lineWidth: 0,
+            data: this.chartData(this.sectionWeek.days, ['temp_min', 'temp_max'])
+          }
+        ]
+      }));
+
+      // Month
+      this.$el.find('.chart-section-month').highcharts(_.extend({}, options, {
+        series: [
+          {
+            name: 'Observed temperature',
+            type: 'line',
+            color: '#1D71A5',
+            zIndex: 100,
+            data: this.chartData(this.sectionMonth.days, 'temp')
+          },
+          {
+            name: 'Average',
+            type: 'line',
+            color: '#1DA595',
+            zIndex: 50,
+            data: this.chartData(this.sectionMonth.days, 'navg')
+          },
+          {
+            name: 'Average high and low',
+            color: '#1DA595',
+            type: 'arearange',
+            fillOpacity: 0.3,
+            zIndex: 0,
+            lineWidth: 0,
+            data: this.chartData(this.sectionMonth.days, ['nmin', 'nmax'])
+          },
+          {
+            name: 'Observed high and low',
+            color: '#1D71A5',
+            type: 'arearange',
+            fillOpacity: 0.3,
+            zIndex: 10,
+            lineWidth: 0,
+            data: this.chartData(this.sectionMonth.days, ['temp_min', 'temp_max'])
+          }
+        ]
+      }));
     },
 
     // Make sections
@@ -156,6 +243,22 @@ define('minnpost-climate', [
       });
     },
 
+    // Make chart data from collection
+    chartData: function(collection, properties) {
+      properties = _.isArray(properties) ? properties : [ properties ];
+
+      return _.values(_.map(collection, function(c, ci) {
+        // The way highcharts accepts dates is weird
+        var date = Date.UTC(c.date.year(), c.date.month(), c.date.date());
+        var set = [ date ];
+
+        _.each(properties, function(p, pi) {
+          set.push(c[p]);
+        });
+        return set;
+      }));
+    },
+
     // Create date from month and day dependent on today
     dateFromMonthDay: function(m, d) {
       // We have to determine if the month and day is this
@@ -172,7 +275,63 @@ define('minnpost-climate', [
 
     // Default options
     defaultOptions: {
-      dailyObservationsPath: 'https://premium.scraperwiki.com/bd5okny/ec1140c12061447/sql/?callback=?&q=[[[QUERY]]]'
+      dailyObservationsPath: 'https://premium.scraperwiki.com/bd5okny/ec1140c12061447/sql/?callback=?&q=[[[QUERY]]]',
+      chartOptions: {
+        chart: {
+          style: {
+            fontFamily: '"HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif',
+            color: '#BCBCBC'
+          }
+        },
+        colors: ['#1D71A5', '#1DA595', '#1DA551'],
+        credits: {
+          enabled: false
+        },
+        title: {
+          enabled: false,
+          text: null
+        },
+        legend: {
+          enabled: false,
+          borderWidth: 0
+        },
+        plotOptions: {
+          line: {
+          }
+        },
+        xAxis: {
+          type: 'datetime',
+          dateTimeLabelFormats: {
+            month: '%e. %b',
+            year: '%b'
+          }
+        },
+        yAxis: {
+          title: {
+            enabled: true,
+            useHTML: true,
+            text: '&deg;F',
+            margin: 5,
+            style: {
+              color: 'inherit',
+              fontWeight: 'normal'
+            }
+          },
+          gridLineColor: '#BCBCBC'
+        },
+        tooltip: {
+          //shadow: false,
+          //borderRadius: 0,
+          //borderWidth: 0,
+          shared: true,
+          style: {},
+          useHTML: true,
+          valueSuffix: '&deg;F'
+          //formatter: function() {
+          //  return '<strong>' + this.key + '</strong> <br /> <br /> ' + this.//series.name + ': <strong>' + this.y + '</strong>';
+          //}
+        }
+      }
     }
   });
 

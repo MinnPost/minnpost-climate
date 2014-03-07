@@ -61,5 +61,20 @@
       "unsemantic/assets/stylesheets/ie"
     ],
     "rname": "unsemantic"
+  },
+  "moment": {
+    "rname": "moment",
+    "js": [
+      "moment/min/moment.min"
+    ],
+    "returns": "moment"
+  },
+  "highcharts": {
+    "js": [
+      "highcharts/highcharts",
+      "highcharts/highcharts-more"
+    ],
+    "rname": "Highcharts",
+    "returns": "Highcharts"
   }
 }

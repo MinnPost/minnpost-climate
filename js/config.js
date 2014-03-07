@@ -10,6 +10,13 @@ require.config({
     'Backbone': {
       deps: ['underscore', 'jquery'],
       exports: 'Backbone'
+    },
+    'Highcharts': {
+      exports: 'Highcharts',
+      'deps': [ 'jquery']
+    },
+    'HighchartsMore': {
+      'deps': [ 'Highcharts']
     }
   },
   baseUrl: 'js',
@@ -23,6 +30,8 @@ require.config({
     'Ractive': '../bower_components/ractive/build/Ractive-legacy.min',
     'Ractive-Backbone': '../bower_components/ractive-backbone/Ractive-Backbone.min',
     'Ractive-events-tap': '../bower_components/ractive-events-tap/Ractive-events-tap.min',
+    'Highcharts': '../bower_components/highcharts/highcharts',
+    'HighchartsMore': '../bower_components/highcharts/highcharts-more',
     'minnpost-climate': 'app'
   }
 });

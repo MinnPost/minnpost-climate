@@ -15,7 +15,7 @@
   <h3>Last week</h3>
 
   {{#sectionWeek.avgTempDiff}}
-    <p>Today is about {{ Math.round(sectionWeek.avgTempDiff * 100) / 100 }}&deg;F different than the normal.</p>
+    <p>This past week (7 days) is about {{ Math.round(sectionWeek.totalTempDiff * 100) / 100 }}&deg;F degrees colder than the average in total and about {{ Math.round(sectionWeek.avgTempDiff * 100) / 100 }}&deg;F colder on average each day.</p>
 
     <div class="chart chart-section-week"></div>
   {{/sectionWeek.avgTempDiff}}
@@ -23,7 +23,7 @@
   <h3>Last month</h3>
 
   {{#sectionMonth.avgTempDiff}}
-    <p>Today is about {{ Math.round(sectionMonth.avgTempDiff * 100) / 100 }}&deg;F different than the normal.</p>
+    <p>This past month (30 days) is about {{ Math.round(sectionMonth.totalTempDiff * 100) / 100 }}&deg;F degrees colder than the average in total and about {{ Math.round(sectionMonth.avgTempDiff * 100) / 100 }}&deg;F colder on average each day.</p>
 
     <div class="chart chart-section-month"></div>
   {{/sectionMonth.avgTempDiff}}
