@@ -19,6 +19,7 @@ Two main sources are used for this application.
     * `node data-processing/station-normals.js`
     * This will create files in the `data` directory like `data/[[[STATION]]]-daily.json`.
 * For the historical GSOD data, we need to update this daily, so we use [ScraperWiki](https://scraperwiki.com/) to process the data and create an API.  A (not-guaranteed to be up-to-date) copy of the scraper can be found in `data-processing/daily-observations-scraperwiki.py`.
+    * You can query this data with: `https://premium.scraperwiki.com/bd5okny/ec1140c12061447/sql/?q=[[[SQL_QUERY]]]`
 
 ## Development and running locally
 
