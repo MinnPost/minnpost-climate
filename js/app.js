@@ -383,12 +383,21 @@ define('minnpost-climate', [
         },
         plotOptions: {
           line: {
+            lineWidth: 3,
+            states: {
+              hover: {
+                lineWidth: 3
+              }
+            },
+            marker: {
+              enabled: false
+            }
           }
         },
         xAxis: {
           type: 'datetime',
           dateTimeLabelFormats: {
-            month: '%e. %b',
+            month: '%b %e',
             year: '%b'
           }
         },
