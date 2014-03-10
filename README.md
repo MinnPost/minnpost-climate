@@ -12,6 +12,11 @@ Two main sources are used for this application.
     * [What are Normals](http://www.ncdc.noaa.gov/oa/climate/normals/usnormals.html#WHATARENORMALS).
     * [Use of Normals](http://www.ncdc.noaa.gov/oa/climate/normals/usnormals.html#NORMALSUSAGE).  "Meteorologists and climatologists regularly use Normals for placing recent climate conditions into a historical context."
 * [Global Surface Summary of Day](http://www.ncdc.noaa.gov/cgi-bin/res40.pl?page=gsod.html) (GSOD) which is a global collection of recorded conditions each day.
+* TODO: Get snowfall data.
+    * The GSOD does nto have snowfall data.  The Global Historical Climate Network (GHCN) does, but does not seem to have average temperature data.
+    * http://www.ncdc.noaa.gov/cdo-web/datasets
+    * ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/readme.txt
+    * ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/hcn/USW00014922.dly
 
 ## Data processing
 
