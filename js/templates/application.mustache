@@ -14,15 +14,15 @@
         {{#isYesterday}} Yesterday {{/isYesterday}}
       </h3>
       <p>
-        {{^isYesterday}} Today is {{/isYesterday}}
-        {{#isYesterday}} Yesterday was {{/isYesterday}}
+        {{^isYesterday}} Today's average temperature is {{/isYesterday}}
+        {{#isYesterday}} Yesterday's average temperature was {{/isYesterday}}
         about
         <strong>
           {{ Math.abs(Math.round(sectionToday.avgTempDiff * 10) / 10) }}&deg;F
           {{#(sectionToday.avgTempDiff > 0)}} warmer {{/()}}
           {{#(sectionToday.avgTempDiff < 0)}} colder {{/()}}
         </strong>
-        than the normal {{ sectionToday.days.0.navg }}&deg;F.
+        than the normal temperature for this date ({{ sectionToday.days.0.navg }}&deg;F).
       </p>
     </div>
 
