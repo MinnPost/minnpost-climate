@@ -11,7 +11,7 @@ Two main sources are used for this application.
 * [NOAA Climatological Normals](http://www.ncdc.noaa.gov/oa/climate/normals/usnormals.html) (1981-2010): "Climate Normals are the latest three-decade averages of climatological variables, including temperature and precipitation."
     * [What are Normals](http://www.ncdc.noaa.gov/oa/climate/normals/usnormals.html#WHATARENORMALS).
     * [Use of Normals](http://www.ncdc.noaa.gov/oa/climate/normals/usnormals.html#NORMALSUSAGE).  "Meteorologists and climatologists regularly use Normals for placing recent climate conditions into a historical context."
-* [Global Surface Summary of Day](http://www.ncdc.noaa.gov/cgi-bin/res40.pl) (GSOD) which is a global collection of recorded conditions each day.
+* [Global Surface Summary of Day](http://www.ncdc.noaa.gov/cgi-bin/res40.pl?page=gsod.html) (GSOD) which is a global collection of recorded conditions each day.
 
 ## Data processing
 
