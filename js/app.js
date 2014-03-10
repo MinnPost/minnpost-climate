@@ -71,8 +71,29 @@ define('minnpost-climate', [
     // Draw charts
     drawCharts: function() {
       this.$el.find('.chart-section-week').highcharts(this.makeChartOptions(this.sectionWeek));
-      this.$el.find('.chart-section-month').highcharts(this.makeChartOptions(this.sectionMonth));
+      //this.$el.find('.chart-section-month').highcharts(this.makeChartOptions(this.sectionMonth));
       this.$el.find('.chart-section-season').highcharts(this.makeChartOptions(this.sectionSeason));
+
+      // Bar chart for month
+      this.$el.find('.chart-section-month').highcharts(
+        _.extend(_.clone(this.options.chartOptions), {
+          series: [
+            {
+              name: 'Temp difference from average',
+              type: 'column',
+              color: '#1D71A5',
+              zIndex: 100,
+              data: _.map(this.chartData(this.sectionMonth.days, 'tempDiff'), function(d, di) {
+                return {
+                  x: d[0],
+                  y: Math.round(d[1] * 10) / 10,
+                  color: (d[1] > 0) ? '#A51D2D' : '#5AAEE2'
+                };
+              })
+            }
+          ]
+        })
+      );
     },
 
     // Make chart options for specific section
@@ -174,6 +195,10 @@ define('minnpost-climate', [
       section = { days: section };
 
       // Temp diff
+      section.days = _.map(section.days, function(d, di) {
+        d.tempDiff = d.temp - d.navg;
+        return d;
+      });
       section.totalTempDiff = _.reduce(section.days, function(total, d, di) {
         return total + (d.temp - d.navg);
       }, 0);
@@ -324,7 +349,8 @@ define('minnpost-climate', [
           style: {
             fontFamily: '"HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif',
             color: '#BCBCBC'
-          }
+          },
+          spacingRight: 15
         },
         colors: ['#1D71A5', '#1DA595', '#1DA551'],
         credits: {
@@ -353,7 +379,11 @@ define('minnpost-climate', [
         },
         xAxis: {
           type: 'datetime',
+          startOnTick: false,
           dateTimeLabelFormats: {
+            hour: ' ',
+            day: '%b %e',
+            week: '%b %e',
             month: '%b %e',
             year: '%b'
           }
