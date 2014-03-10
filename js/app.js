@@ -36,6 +36,7 @@ define('minnpost-climate', [
     start: function() {
       this.now = moment();
       this.today = moment(this.now.format('YYYY-MM-DD'));
+      this.yesterday = moment(this.today).subtract(1, 'days');
       this.year = this.now.year();
 
       // Determine season
@@ -49,6 +50,7 @@ define('minnpost-climate', [
         el: this.$el,
         template: tApp,
         data: {
+          helpers: helpers
         },
         partials: {
           loading: tLoading
@@ -68,33 +70,23 @@ define('minnpost-climate', [
 
     // Draw charts
     drawCharts: function() {
+      this.$el.find('.chart-section-week').highcharts(this.makeChartOptions(this.sectionWeek));
+      this.$el.find('.chart-section-month').highcharts(this.makeChartOptions(this.sectionMonth));
+      this.$el.find('.chart-section-season').highcharts(this.makeChartOptions(this.sectionSeason));
+    },
+
+    // Make chart options for specific section
+    makeChartOptions: function(section) {
       var options = _.clone(this.options.chartOptions);
 
-      // Week
-      this.$el.find('.chart-section-week').highcharts(_.extend({}, options, {
+      return _.extend({}, options, {
         series: [
           {
-            name: 'Observed temperature',
+            name: 'Observed temp',
             type: 'line',
             color: '#1D71A5',
             zIndex: 100,
-            data: this.chartData(this.sectionWeek.days, 'temp')
-          },
-          {
-            name: 'Average',
-            type: 'line',
-            color: '#1DA595',
-            zIndex: 50,
-            data: this.chartData(this.sectionWeek.days, 'navg')
-          },
-          {
-            name: 'Average high and low',
-            color: '#1DA595',
-            type: 'arearange',
-            fillOpacity: 0.3,
-            zIndex: 0,
-            lineWidth: 0,
-            data: this.chartData(this.sectionWeek.days, ['nmin', 'nmax'])
+            data: this.chartData(section.days, 'temp')
           },
           {
             name: 'Observed high and low',
@@ -103,86 +95,27 @@ define('minnpost-climate', [
             fillOpacity: 0.3,
             zIndex: 10,
             lineWidth: 0,
-            data: this.chartData(this.sectionWeek.days, ['temp_min', 'temp_max'])
-          }
-        ]
-      }));
-
-      // Month
-      this.$el.find('.chart-section-month').highcharts(_.extend({}, options, {
-        series: [
-          {
-            name: 'Observed temperature',
-            type: 'line',
-            color: '#1D71A5',
-            zIndex: 100,
-            data: this.chartData(this.sectionMonth.days, 'temp')
+            data: this.chartData(section.days, ['temp_min', 'temp_max'])
           },
           {
-            name: 'Average',
+            name: 'Average temp',
             type: 'line',
             color: '#1DA595',
             zIndex: 50,
-            data: this.chartData(this.sectionMonth.days, 'navg')
+            lineWidth: 4,
+            data: this.chartData(section.days, 'navg')
           },
           {
             name: 'Average high and low',
             color: '#1DA595',
             type: 'arearange',
-            fillOpacity: 0.3,
+            fillOpacity: 0.15,
             zIndex: 0,
             lineWidth: 0,
-            data: this.chartData(this.sectionMonth.days, ['nmin', 'nmax'])
-          },
-          {
-            name: 'Observed high and low',
-            color: '#1D71A5',
-            type: 'arearange',
-            fillOpacity: 0.3,
-            zIndex: 10,
-            lineWidth: 0,
-            data: this.chartData(this.sectionMonth.days, ['temp_min', 'temp_max'])
+            data: this.chartData(section.days, ['nmin', 'nmax'])
           }
         ]
-      }));
-
-      // Season
-      this.$el.find('.chart-section-season').highcharts(_.extend({}, options, {
-        series: [
-          {
-            name: 'Observed temperature',
-            type: 'line',
-            color: '#1D71A5',
-            zIndex: 100,
-            data: this.chartData(this.sectionSeason.days, 'temp')
-          },
-          {
-            name: 'Average',
-            type: 'line',
-            color: '#1DA595',
-            zIndex: 50,
-            data: this.chartData(this.sectionSeason.days, 'navg')
-          },
-          {
-            name: 'Average high and low',
-            color: '#1DA595',
-            type: 'arearange',
-            fillOpacity: 0.3,
-            zIndex: 0,
-            lineWidth: 0,
-            data: this.chartData(this.sectionSeason.days, ['nmin', 'nmax'])
-          },
-          {
-            name: 'Observed high and low',
-            color: '#1D71A5',
-            type: 'arearange',
-            fillOpacity: 0.3,
-            zIndex: 10,
-            lineWidth: 0,
-            data: this.chartData(this.sectionSeason.days, ['temp_min', 'temp_max'])
-          }
-        ]
-      }));
+      });
     },
 
     // Make sections
@@ -226,6 +159,11 @@ define('minnpost-climate', [
       this.view.set('sectionWeek', this.sectionWeek);
       this.view.set('sectionMonth', this.sectionMonth);
       this.view.set('sectionSeason', this.sectionSeason);
+
+      // Attach other parts to view
+      this.view.set('season', this.season);
+      this.view.set('seasonSpan', this.options.seasons[this.season]);
+      this.view.set('options', this.options);
 
       // Mark as computer
       this.view.set('computed', true);
@@ -272,6 +210,17 @@ define('minnpost-climate', [
       });
     },
 
+    // Determine whether the data reflects today, or not
+    adjustToday: function(today) {
+      if (this.today.isSame(today)) {
+        this.isYesterday = false;
+      }
+      else if (this.yesterday.isSame(today)) {
+        this.isYesterday = true;
+        this.today = today;
+      }
+    },
+
     // Fetch data about recent observations
     fetchRecentObservations: function() {
       var thisApp = this;
@@ -283,6 +232,13 @@ define('minnpost-climate', [
 
       // Make request
       return $.getJSON(url).done(function(data) {
+        // Determine if we have today's or yesterday's data yet
+        var max = _.max(data, function(d, di) {
+          return moment(d.date, 'YYYY-MM-DD').unix();
+        });
+        thisApp.adjustToday(max);
+
+        // Add data to days collection
         _.each(data, function(d, di) {
           var id;
           d.date = moment(d.date, 'YYYY-MM-DD');
@@ -301,6 +257,7 @@ define('minnpost-climate', [
       // Adjust the season years
       // TODO
 
+      // Look to see what today is in.
       _.each(this.options.seasons, function(s, si) {
         if ((thisApp.today.isAfter(s.start) ||
           thisApp.today.isSame(s.start)) &&
