@@ -31,13 +31,13 @@
       <h3>Last week</h3>
 
       <p>
-        This past week (7 days) is about
+        This past week (7 days) was about
         <strong>
           {{ Math.abs(Math.round(sectionWeek.avgTempDiff * 10) / 10) }}&deg;F
           {{#(sectionWeek.avgTempDiff > 0)}} warmer {{/()}}
           {{#(sectionWeek.avgTempDiff < 0)}} colder {{/()}}
         </strong>
-        colder on average each day.
+        each day than the normal average daily temperature.
       </p>
 
       <div class="chart chart-section-week"></div>
@@ -45,16 +45,16 @@
 
 
     <div class="section-section">
-      <h3>Last month</h3>
+      <h3>Last 30 days</h3>
 
       <p>
-        This past month (30 days) is about
+        The past month (30 days) has been about
         <strong>
           {{ Math.abs(Math.round(sectionMonth.avgTempDiff * 10) / 10) }}&deg;F
           {{#(sectionMonth.avgTempDiff > 0)}} warmer {{/()}}
           {{#(sectionMonth.avgTempDiff < 0)}} colder {{/()}}
         </strong>
-        colder on average each day.
+        each day than the normal average temperature.
       </p>
 
       <div class="chart chart-section-month"></div>
