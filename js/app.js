@@ -95,29 +95,8 @@ define('minnpost-climate', [
     // Draw charts
     drawCharts: function() {
       this.$el.find('.chart-section-week').highcharts(this.makeChartOptions(this.sectionWeek));
-      //this.$el.find('.chart-section-month').highcharts(this.makeChartOptions(this.sectionMonth));
+      this.$el.find('.chart-section-month').highcharts(this.makeChartOptions(this.sectionMonth));
       this.$el.find('.chart-section-season').highcharts(this.makeChartOptions(this.sectionSeason));
-
-      // Bar chart for month
-      this.$el.find('.chart-section-month').highcharts(
-        _.extend(_.clone(this.options.chartOptions), {
-          series: [
-            {
-              name: 'Temp difference from average',
-              type: 'column',
-              color: '#1D71A5',
-              zIndex: 100,
-              data: _.map(this.chartData(this.sectionMonth.days, 'tempDiff'), function(d, di) {
-                return {
-                  x: d[0],
-                  y: Math.round(d[1] * 10) / 10,
-                  color: (d[1] > 0) ? '#A51D2D' : '#5AAEE2'
-                };
-              })
-            }
-          ]
-        })
-      );
     },
 
     // Make chart options for specific section
@@ -127,37 +106,17 @@ define('minnpost-climate', [
       return _.extend({}, options, {
         series: [
           {
-            name: 'Observed temp',
-            type: 'line',
+            name: 'Average temperature difference from normal',
+            type: 'column',
             color: '#1D71A5',
             zIndex: 100,
-            data: this.chartData(section.days, 'temp')
-          },
-          {
-            name: 'Observed high and low',
-            color: '#1D71A5',
-            type: 'arearange',
-            fillOpacity: 0.3,
-            zIndex: 10,
-            lineWidth: 0,
-            data: this.chartData(section.days, ['temp_min', 'temp_max'])
-          },
-          {
-            name: 'Average temp',
-            type: 'line',
-            color: '#1DA595',
-            zIndex: 50,
-            lineWidth: 4,
-            data: this.chartData(section.days, 'navg')
-          },
-          {
-            name: 'Average high and low',
-            color: '#1DA595',
-            type: 'arearange',
-            fillOpacity: 0.15,
-            zIndex: 0,
-            lineWidth: 0,
-            data: this.chartData(section.days, ['nmin', 'nmax'])
+            data: _.map(this.chartData(section.days, 'tempDiff'), function(d, di) {
+              return {
+                x: d[0],
+                y: Math.round(d[1] * 10) / 10,
+                color: (d[1] > 0) ? '#A51D2D' : '#1D71A5'
+              };
+            })
           }
         ]
       });
@@ -381,6 +340,11 @@ define('minnpost-climate', [
             marker: {
               enabled: false
             }
+          },
+          column: {
+            minPointLength: 1,
+            groupPadding: 0.01,
+            pointPadding: 0.0
           }
         },
         xAxis: {
