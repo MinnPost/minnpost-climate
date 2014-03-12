@@ -169,6 +169,8 @@ define('helpers', ['jquery', 'underscore'],
 
 define('text!templates/loading.mustache',[],function () { return '<div class="loading-container">\n  <div class="loading"><span>Loading...</span></div>\n</div>';});
 
+define('text!templates/chart-tooltip.underscore',[],function () { return '<div class="chart-tooltip">\n  <strong><%= Highcharts.dateFormat(\'%A, %b %e, %Y\', data.key) %></strong><br/>\n  <%= data.series.name %>: <%= Math.round(data.y * 10) / 10 %>&deg;F <br />\n  <br />\n  Average temperature: <%= Math.round(data.point.temp * 10) / 10 %>&deg;F <br />\n  High and low temperature: <%= Math.round(data.point.temp_max * 10) / 10 %> - <%= Math.round(data.point.temp_min * 10) / 10 %>&deg;F<br />\n  <br />\n  Normal avg. temperature: <%= Math.round(data.point.navg * 10) / 10 %>&deg;F <br />\n  Normal avg. high and low: <%= Math.round(data.point.nmax * 10) / 10 %> - <%= Math.round(data.point.nmin * 10) / 10 %>&deg;F<br />\n</div>\n';});
+
 define('text!templates/application.mustache',[],function () { return '<div class="message-container"></div>\n\n<div class="content-container">\n\n  {{^computed}}\n    {{>loading}}\n  {{/computed}}\n\n  {{#computed}}\n\n    <div class="section-section">\n      <h3>\n        {{^isYesterday}} Today {{/isYesterday}}\n        {{#isYesterday}} Yesterday {{/isYesterday}}\n      </h3>\n      <p>\n        {{^isYesterday}} Today\'s average temperature is {{/isYesterday}}\n        {{#isYesterday}} Yesterday\'s average temperature was {{/isYesterday}}\n        about\n        <strong>\n          {{ Math.abs(Math.round(sectionToday.avgTempDiff * 10) / 10) }}&deg;F\n          {{#(sectionToday.avgTempDiff > 0)}} warmer {{/()}}\n          {{#(sectionToday.avgTempDiff < 0)}} colder {{/()}}\n        </strong>\n        than the normal temperature for this date ({{ sectionToday.days.0.navg }}&deg;F).\n      </p>\n    </div>\n\n\n    <div class="section-section">\n      <h3>Last week</h3>\n\n      <p>\n        This past week (7 days) was about\n        <strong>\n          {{ Math.abs(Math.round(sectionWeek.avgTempDiff * 10) / 10) }}&deg;F\n          {{#(sectionWeek.avgTempDiff > 0)}} warmer {{/()}}\n          {{#(sectionWeek.avgTempDiff < 0)}} colder {{/()}}\n        </strong>\n        each day than the normal average daily temperature.\n      </p>\n\n      <div class="chart chart-section-week"></div>\n    </div>\n\n\n    <div class="section-section">\n      <h3>Last 30 days</h3>\n\n      <p>\n        The past month (30 days) has been about\n        <strong>\n          {{ Math.abs(Math.round(sectionMonth.avgTempDiff * 10) / 10) }}&deg;F\n          {{#(sectionMonth.avgTempDiff > 0)}} warmer {{/()}}\n          {{#(sectionMonth.avgTempDiff < 0)}} colder {{/()}}\n        </strong>\n        each day than the normal average temperature.\n      </p>\n\n      <div class="chart chart-section-month"></div>\n    </div>\n\n\n    <div class="section-section">\n      <h3>This {{ season }}</h3>\n\n      <p>\n        This {{ season }}\n        ({{ seasonSpan.start.format(\'MMM Do\') }} - {{ seasonSpan.end.subtract(1, \'days\').format(\'MMM DD\') }})\n        has been about\n        <strong>\n          {{ Math.abs(Math.round(sectionSeason.avgTempDiff * 10) / 10) }}&deg;F\n          {{#(sectionSeason.avgTempDiff > 0)}} warmer {{/()}}\n          {{#(sectionSeason.avgTempDiff < 0)}} colder {{/()}}\n        </strong>\n        each day than the normal average temperature.\n      </p>\n\n      <div class="chart chart-section-season"></div>\n    </div>\n\n  {{/computed}}\n\n</div>\n\n<div class="footnote-container">\n  <div class="footnote">\n    <p>\n      <a href="http://www.ncdc.noaa.gov/oa/climate/normals/usnormals.html" target="_blank">Climate normals</a> are the latest three-decade (1981-2010) averages of climatological variables and are provided by the National Oceanic and Atmospheric Administration (NOAA).\n      <a href="http://www.ncdc.noaa.gov/cgi-bin/res40.pl?page=gsod.html" target="_blank">Global Surface Summary of Day (GSOD) data</a> which is a global collection of recorded conditions each day is also provided by the NOAA.\n      Some code, techniques, and data on <a href="https://github.com/minnpost/minnpost-climate" target="_blank">Github</a>.\n    </p>\n\n  </div>\n</div>\n';});
 
 define('text!../data/USW00014922-station.json',[],function () { return '{"name":"MN MINNEAPOLIS/ST PAUL AP","ghcnDailyID":"USW00014922","lat":44.8831,"lon":-93.2289,"elevation":265.8}';});
@@ -187,15 +189,19 @@ define('minnpost-climate', [
   'Highcharts', 'HighchartsMore',
   'helpers',
   'text!templates/loading.mustache',
+  'text!templates/chart-tooltip.underscore',
   'text!templates/application.mustache',
   'text!../data/USW00014922-station.json',
   'text!../data/USW00014922-daily.json'
 ],
-  function(_, $, moment, Ractive, R1, Highcharts, H1, helpers, tLoading, tApp, dataMplsStation, dataMplsDaily) {
+  function(_, $, moment, Ractive, R1, Highcharts, H1, helpers, tLoading, tTooltip, tApp, dataMplsStation, dataMplsDaily) {
 
   // Read in data
   dataMplsStation = JSON.parse(dataMplsStation);
   dataMplsDaily = JSON.parse(dataMplsDaily);
+
+  // Preprocess some templates
+  tTooltip = _.template(tTooltip);
 
   // Constructor for app
   var App = function(options) {
@@ -281,18 +287,27 @@ define('minnpost-climate', [
       var options = _.clone(this.options.chartOptions);
 
       return _.extend({}, options, {
+        tooltip: {
+          shadow: false,
+          borderWidth: 0.5,
+          style: {},
+          useHTML: true,
+          formatter: function() {
+            return tTooltip({ data: this });
+          }
+        },
         series: [
           {
-            name: 'Average temperature difference from normal',
+            name: 'Difference of average temperature from normal',
             type: 'column',
             color: '#1D71A5',
             zIndex: 100,
-            data: _.map(this.chartData(section.days, 'tempDiff'), function(d, di) {
-              return {
-                x: d[0],
-                y: Math.round(d[1] * 10) / 10,
-                color: (d[1] > 0) ? '#DB423D' : '#15829E'
-              };
+            data: _.map(section.days, function(d, di) {
+              return _.extend({
+                x: Date.UTC(d.date.year(), d.date.month(), d.date.date()),
+                y: Math.round(d.tempDiff * 10) / 10,
+                color: (d.tempDiff >= 0) ? '#DB423D' : '#15829E'
+              }, d);
             })
           }
         ]
