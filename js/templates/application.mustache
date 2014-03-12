@@ -65,15 +65,15 @@
       <h3>This {{ season }}</h3>
 
       <p>
-        This current {{ season }}
+        This {{ season }}
         ({{ seasonSpan.start.format('MMM Do') }} - {{ seasonSpan.end.subtract(1, 'days').format('MMM DD') }})
-        is about
+        has been about
         <strong>
           {{ Math.abs(Math.round(sectionSeason.avgTempDiff * 10) / 10) }}&deg;F
           {{#(sectionSeason.avgTempDiff > 0)}} warmer {{/()}}
           {{#(sectionSeason.avgTempDiff < 0)}} colder {{/()}}
         </strong>
-        on average each day.
+        each day than the normal average temperature.
       </p>
 
       <div class="chart chart-section-season"></div>
