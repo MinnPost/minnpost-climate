@@ -342,7 +342,7 @@ define('minnpost-climate', [
             }
           },
           column: {
-            minPointLength: 1,
+            minPointLength: 2,
             groupPadding: 0.01,
             pointPadding: 0.0
           }
