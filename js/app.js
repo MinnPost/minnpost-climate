@@ -114,7 +114,7 @@ define('minnpost-climate', [
               return {
                 x: d[0],
                 y: Math.round(d[1] * 10) / 10,
-                color: (d[1] > 0) ? '#A51D2D' : '#1D71A5'
+                color: (d[1] > 0) ? '#DB423D' : '#15829E'
               };
             })
           }
