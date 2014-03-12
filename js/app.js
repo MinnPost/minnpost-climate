@@ -10,15 +10,19 @@ define('minnpost-climate', [
   'Highcharts', 'HighchartsMore',
   'helpers',
   'text!templates/loading.mustache',
+  'text!templates/chart-tooltip.underscore',
   'text!templates/application.mustache',
   'text!../data/USW00014922-station.json',
   'text!../data/USW00014922-daily.json'
 ],
-  function(_, $, moment, Ractive, R1, Highcharts, H1, helpers, tLoading, tApp, dataMplsStation, dataMplsDaily) {
+  function(_, $, moment, Ractive, R1, Highcharts, H1, helpers, tLoading, tTooltip, tApp, dataMplsStation, dataMplsDaily) {
 
   // Read in data
   dataMplsStation = JSON.parse(dataMplsStation);
   dataMplsDaily = JSON.parse(dataMplsDaily);
+
+  // Preprocess some templates
+  tTooltip = _.template(tTooltip);
 
   // Constructor for app
   var App = function(options) {
@@ -104,18 +108,27 @@ define('minnpost-climate', [
       var options = _.clone(this.options.chartOptions);
 
       return _.extend({}, options, {
+        tooltip: {
+          shadow: false,
+          borderWidth: 0.5,
+          style: {},
+          useHTML: true,
+          formatter: function() {
+            return tTooltip({ data: this });
+          }
+        },
         series: [
           {
-            name: 'Average temperature difference from normal',
+            name: 'Difference of average temperature from normal',
             type: 'column',
             color: '#1D71A5',
             zIndex: 100,
-            data: _.map(this.chartData(section.days, 'tempDiff'), function(d, di) {
-              return {
-                x: d[0],
-                y: Math.round(d[1] * 10) / 10,
-                color: (d[1] > 0) ? '#DB423D' : '#15829E'
-              };
+            data: _.map(section.days, function(d, di) {
+              return _.extend({
+                x: Date.UTC(d.date.year(), d.date.month(), d.date.date()),
+                y: Math.round(d.tempDiff * 10) / 10,
+                color: (d.tempDiff >= 0) ? '#DB423D' : '#15829E'
+              }, d);
             })
           }
         ]
