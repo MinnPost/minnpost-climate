@@ -8,15 +8,17 @@ A running look at local, current weather against historical climate patterns.
 
 Two main sources are used for this application.
 
+http://www.ncdc.noaa.gov/cdo-web/datasets
+
 * [NOAA Climatological Normals](http://www.ncdc.noaa.gov/oa/climate/normals/usnormals.html) (1981-2010): "Climate Normals are the latest three-decade averages of climatological variables, including temperature and precipitation."
     * [What are Normals](http://www.ncdc.noaa.gov/oa/climate/normals/usnormals.html#WHATARENORMALS).
     * [Use of Normals](http://www.ncdc.noaa.gov/oa/climate/normals/usnormals.html#NORMALSUSAGE).  "Meteorologists and climatologists regularly use Normals for placing recent climate conditions into a historical context."
 * [Global Surface Summary of Day](http://www.ncdc.noaa.gov/cgi-bin/res40.pl?page=gsod.html) (GSOD) which is a global collection of recorded conditions each day.
 * TODO: Get snowfall data.
-    * The GSOD does nto have snowfall data.  The Global Historical Climate Network (GHCN) does, but does not seem to have average temperature data.
-    * http://www.ncdc.noaa.gov/cdo-web/datasets
-    * ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/readme.txt
-    * ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/hcn/USW00014922.dly
+* "[Global Historical Climate Network](ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/readme.txt) (GHCN) includes daily observations from around the world. The dataset includes observations from World Meteorological Organization, Cooperative, and CoCoRaHS networks."
+    * GHCN matches up with the Normals and contains snowfall data.  It is not up to date and usually lags a few days behind the current date.
+    * [GHCN list of stations](ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/ghcnd-stations.txt)
+        * The GHCN Station ID for Minneapolis/St. Paul (MSP) airport is `[USW00014922](http://www1.ncdc.noaa.gov/pub/data/normals/1981-2010/products/station/USW00014922.normals.txt)`.  This can be used for the GHCN and Normals sets (though the GSOD identifiers are different).
 
 ## Data processing
 

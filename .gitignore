@@ -4,6 +4,7 @@ bower_components/
 !dist
 dist/data.js
 dist/templates.js
+scraperwiki.sqlite
 
 
 # General git ignores
