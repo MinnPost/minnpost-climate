@@ -3,8 +3,8 @@
   <%= data.series.name %>: <%= Math.round(data.y * 10) / 10 %>&deg;F <br />
   <br />
   Average temperature: <%= Math.round(data.point.temp * 10) / 10 %>&deg;F <br />
-  High and low temperature: <%= Math.round(data.point.temp_max * 10) / 10 %> - <%= Math.round(data.point.temp_min * 10) / 10 %>&deg;F<br />
+  High and low temperature: <%= Math.round(data.point.tmax * 10) / 10 %> - <%= Math.round(data.point.tmin * 10) / 10 %>&deg;F<br />
   <br />
-  Normal avg. temperature: <%= Math.round(data.point.navg * 10) / 10 %>&deg;F <br />
-  Normal avg. high and low: <%= Math.round(data.point.nmax * 10) / 10 %> - <%= Math.round(data.point.nmin * 10) / 10 %>&deg;F<br />
+  Normal avg. temperature: <%= Math.round(data.point.ntavg * 10) / 10 %>&deg;F <br />
+  Normal avg. high and low: <%= Math.round(data.point.ntmax * 10) / 10 %> - <%= Math.round(data.point.ntmin * 10) / 10 %>&deg;F<br />
 </div>

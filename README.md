@@ -6,27 +6,27 @@ A running look at local, current weather against historical climate patterns.
 
 ## Data
 
-Two main sources are used for this application.
-
-http://www.ncdc.noaa.gov/cdo-web/datasets
+Data sources are from the National Oceanic and Atmospheric Administration (NOAA) [datasets](http://www.ncdc.noaa.gov/cdo-web/datasets).
 
 * [NOAA Climatological Normals](http://www.ncdc.noaa.gov/oa/climate/normals/usnormals.html) (1981-2010): "Climate Normals are the latest three-decade averages of climatological variables, including temperature and precipitation."
     * [What are Normals](http://www.ncdc.noaa.gov/oa/climate/normals/usnormals.html#WHATARENORMALS).
     * [Use of Normals](http://www.ncdc.noaa.gov/oa/climate/normals/usnormals.html#NORMALSUSAGE).  "Meteorologists and climatologists regularly use Normals for placing recent climate conditions into a historical context."
-* [Global Surface Summary of Day](http://www.ncdc.noaa.gov/cgi-bin/res40.pl?page=gsod.html) (GSOD) which is a global collection of recorded conditions each day.
-* TODO: Get snowfall data.
 * "[Global Historical Climate Network](ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/readme.txt) (GHCN) includes daily observations from around the world. The dataset includes observations from World Meteorological Organization, Cooperative, and CoCoRaHS networks."
-    * GHCN matches up with the Normals and contains snowfall data.  It is not up to date and usually lags a few days behind the current date.
+    * GHCN does not contain an average temperature, so we use an average of the high and low.
+    * GHCN contains snowfall data (while GSOD does not).
+    * GHCN is not up to date and usually lags a few days behind the current date.
     * [GHCN list of stations](ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/ghcnd-stations.txt)
-        * The GHCN Station ID for Minneapolis/St. Paul (MSP) airport is `[USW00014922](http://www1.ncdc.noaa.gov/pub/data/normals/1981-2010/products/station/USW00014922.normals.txt)`.  This can be used for the GHCN and Normals sets (though the GSOD identifiers are different).
+        * The GHCN Station ID for Minneapolis/St. Paul (MSP) airport is [USW00014922](http://www1.ncdc.noaa.gov/pub/data/normals/1981-2010/products/station/USW00014922.normals.txt).  This can be used for the GHCN and Normals sets (though the GSOD identifiers are different).
+* [Global Surface Summary of Day](http://www.ncdc.noaa.gov/cgi-bin/res40.pl?page=gsod.html) (GSOD) which is a global collection of recorded conditions each day.
+    * GSOD is used to fill in the most recent data.
+    * GSOD does contain an average
+* For current day data, we use ????.  
 
 ## Data processing
 
-* For the Normals, this data does not get updated (except each decade), so we store locally and use directly in application.  Run the following to download and parse the Normals data:
-    * `node data-processing/station-normals.js`
-    * This will create files in the `data` directory like `data/[[[STATION]]]-daily.json`.
-* For the historical GSOD data, we need to update this daily, so we use [ScraperWiki](https://scraperwiki.com/) to process the data and create an API.  A (not-guaranteed to be up-to-date) copy of the scraper can be found in `data-processing/daily-observations-scraperwiki.py`.
-    * You can query this data with: `https://premium.scraperwiki.com/bd5okny/ec1140c12061447/sql/?q=[[[SQL_QUERY]]]`
+* A scraper is written get the historical and recent data.  It is meant to be run on the [ScraperWiki](https://scraperwiki.com/) platform but can be run locally with the following command and will create a local `scraperwiki.sqlite` database:
+    * `python data-processing/daily-scraperwiki.py`
+    * You can query the actual scraper with something like the following: `https://premium.scraperwiki.com/d7fssyq/a43576483d6f43a/sql/?q=[[[SQL_QUERY]]]`
 
 ## Development and running locally
 
@@ -38,14 +38,18 @@ All commands are assumed to on the [command line](http://en.wikipedia.org/wiki/C
    * On a Mac, install [Homebrew](http://brew.sh/), then do: `brew install git`
 1. Install [NodeJS](http://nodejs.org/).
    * On a Mac, do: `brew install node`
-1. Optionally, for development, install [Grunt](http://gruntjs.com/): `npm install -g grunt-cli`
+1. Install [Grunt](http://gruntjs.com/): `npm install -g grunt-cli`
 1. Install [Bower](http://bower.io/): `npm install -g bower`
-1. Install [Ruby](http://www.ruby-lang.org/en/downloads/), though it is probably already installed on your system.
-1. Install [Bundler](http://gembundler.com/): `gem install bundler`
-1. Install [Sass](http://sass-lang.com/): `gem install sass`
-   * On a Mac do: `sudo gem install sass`
-   1. Install [Compass](http://compass-style.org/): `gem install compass`
+1. Install [Ruby](http://www.ruby-lang.org/en/downloads/), though it may already be on your system.
+1. Install [Bundler](http://gembundler.com/), though it may already be on your system: `gem install bundler`
+1. Install [Compass](http://compass-style.org/): `gem install compass`
    * On a Mac do: `sudo gem install compass`
+1. Install [Python](http://www.python.org/getit/), though it may already be on your system.
+1. Install [pip](https://pypi.python.org/pypi/pip): `easy_install pip`
+1. (Optional) Use [virtualenv](http://www.virtualenv.org/en/latest/), where `.env` is an environment name that you can change if you want.
+    1. `easy_install virtualenv`
+    1. `virtualenv .env`
+    1. `cd .env && source bin/activiate; cd -;`
 
 
 ### Get code and install packages
@@ -56,6 +60,7 @@ Get the code for this project and install the necessary dependency libraries and
 1. Go into the template directory: `cd minnpost-climate`
 1. Install NodeJS packages: `npm install`
 1. Install Bower components: `bower install`
+1. Install Python packages: `pip install -r requirements.txt`
 
 ### Running
 

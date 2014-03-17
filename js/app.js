@@ -11,15 +11,9 @@ define('minnpost-climate', [
   'helpers',
   'text!templates/loading.mustache',
   'text!templates/chart-tooltip.underscore',
-  'text!templates/application.mustache',
-  'text!../data/USW00014922-station.json',
-  'text!../data/USW00014922-daily.json'
+  'text!templates/application.mustache'
 ],
-  function(_, $, moment, Ractive, R1, Highcharts, H1, helpers, tLoading, tTooltip, tApp, dataMplsStation, dataMplsDaily) {
-
-  // Read in data
-  dataMplsStation = JSON.parse(dataMplsStation);
-  dataMplsDaily = JSON.parse(dataMplsDaily);
+  function(_, $, moment, Ractive, R1, Highcharts, H1, helpers, tLoading, tTooltip, tApp) {
 
   // Preprocess some templates
   tTooltip = _.template(tTooltip);
@@ -88,9 +82,6 @@ define('minnpost-climate', [
 
       // Determine season
       this.determineSeason();
-
-      // Parse daily normals data loaded above
-      this.parseNormals(dataMplsDaily);
 
       // Create sections for interface
       this.createSections();
@@ -187,43 +178,23 @@ define('minnpost-climate', [
 
       // Temp diff
       section.days = _.map(section.days, function(d, di) {
-        d.tempDiff = d.temp - d.navg;
+        d.tempDiff = d.temp - d.ntavg;
         return d;
       });
       section.totalTempDiff = _.reduce(section.days, function(total, d, di) {
-        return total + (d.temp - d.navg);
+        return total + (d.temp - d.ntavg);
       }, 0);
       section.avgTempDiff = section.totalTempDiff / section.days.length;
+
       // Precip diff
+      /*
       section.totalPrecipDiff = _.reduce(section.days, function(total, d, di) {
         return total + (d.precip - d.nprecip);
       }, 0);
       section.avgPrecipDiff = section.totalPrecipDiff / section.days.length;
+      */
 
       return section;
-    },
-
-    // Parse out normals
-    parseNormals: function(data) {
-      var thisApp = this;
-      var translations = {
-        'dly-tmax-normal': 'nmax',
-        'dly-tmin-normal': 'nmin',
-        'dly-tavg-normal': 'navg',
-        'mtd-prcp-normal': 'nprecip',
-        'mtd-snow-normal': 'nsnow'
-      };
-
-      _.each(translations, function(t, ti) {
-        _.each(data[ti], function(d, di) {
-          var date = thisApp.dateFromMonthDay(d.m, d.d);
-          var id = thisApp.idFromDate(date);
-
-          thisApp.days[id] = thisApp.days[id] || {};
-          thisApp.days[id].date = date;
-          thisApp.days[id][t] = d.v;
-        });
-      });
     },
 
     // Fetch data about recent observations
@@ -232,12 +203,22 @@ define('minnpost-climate', [
       // Currently just use a general amount to ensure we have everything
       // but this could be change to be more accurate
       var recent = this.now.subtract('months', 5);
-      var query = "SELECT date, temp, temp_min, temp_max, precip FROM swdata WHERE date > date('" + recent.format('YYYY-MM-DD') + "')";
-      var url = this.options.dailyObservationsPath.replace('[[[QUERY]]]', query);
+      var query = [];
+
+      query.push("SELECT");
+      query.push("  o.date, o.temp, o.tmax, o.tmin,");
+      query.push("  n.ntmax, n.ntmin, n.ntavg,");
+      query.push("    CASE WHEN temp IS NULL THEN ROUND((o.tmax + o.tmin) / 2, 2)");
+      query.push("      ELSE temp END AS temp");
+      query.push("FROM observations AS o");
+      query.push("  INNER JOIN normals AS n ON");
+      query.push("    o.month = n.month AND o.day = n.day");
+      query.push("WHERE o.date > DATE('" + recent.format('YYYY-MM-DD') + "')");
+      var url = this.options.dailyObservationsPath.replace('[[[QUERY]]]', encodeURIComponent(query.join(' ')));
 
       // Make request
       return $.getJSON(url).done(function(data) {
-        // Add data to days collection
+        // Add data to days collection.
         _.each(data, function(d, di) {
           var id;
           d.date = moment(d.date, 'YYYY-MM-DD');
@@ -302,7 +283,7 @@ define('minnpost-climate', [
 
     // Default options
     defaultOptions: {
-      dailyObservationsPath: 'https://premium.scraperwiki.com/bd5okny/ec1140c12061447/sql/?callback=?&q=[[[QUERY]]]',
+      dailyObservationsPath: 'https://premium.scraperwiki.com/d7fssyq/a43576483d6f43a/sql/?callback=?&q=[[[QUERY]]]',
       seasons: {
         // Start is inclusive
         winter: {
