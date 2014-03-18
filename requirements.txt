@@ -1,1 +1,2 @@
 scraperwiki==0.3.8
+BeautifulSoup==3.2.1

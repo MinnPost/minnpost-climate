@@ -178,11 +178,11 @@ define('minnpost-climate', [
 
       // Temp diff
       section.days = _.map(section.days, function(d, di) {
-        d.tempDiff = d.temp - d.ntavg;
+        d.tempDiff = d.tavg - d.ntavg;
         return d;
       });
       section.totalTempDiff = _.reduce(section.days, function(total, d, di) {
-        return total + (d.temp - d.ntavg);
+        return total + (d.tavg - d.ntavg);
       }, 0);
       section.avgTempDiff = section.totalTempDiff / section.days.length;
 
@@ -206,10 +206,10 @@ define('minnpost-climate', [
       var query = [];
 
       query.push("SELECT");
-      query.push("  o.date, o.temp, o.tmax, o.tmin,");
+      query.push("  o.date, o.tmax, o.tmin,");
       query.push("  n.ntmax, n.ntmin, n.ntavg,");
-      query.push("    CASE WHEN temp IS NULL THEN ROUND((o.tmax + o.tmin) / 2, 2)");
-      query.push("      ELSE temp END AS temp");
+      query.push("    CASE WHEN tavg IS NULL THEN ROUND((o.tmax + o.tmin) / 2, 2)");
+      query.push("      ELSE tavg END AS tavg");
       query.push("FROM observations AS o");
       query.push("  INNER JOIN normals AS n ON");
       query.push("    o.month = n.month AND o.day = n.day");

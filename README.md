@@ -6,20 +6,33 @@ A running look at local, current weather against historical climate patterns.
 
 ## Data
 
-Data sources are from the National Oceanic and Atmospheric Administration (NOAA) [datasets](http://www.ncdc.noaa.gov/cdo-web/datasets).
+Data sources are from the National Oceanic and Atmospheric Administration (NOAA) National Climatic Data Center (NCDC) [datasets](http://www.ncdc.noaa.gov/cdo-web/datasets), as well as the state-level [Minnesota Climatology Office](http://climate.umn.edu/) which run through the University of Minnesota.
+
+Ultimately what we want is a daily summary for every day (including today) for a specific location (Twin Cities).  Outside of getting conditions right now, this should be fairly straightforward, but here is why it's not:
+
+* The main Twin Cities weather stations switched from downtown Minneapolis to the MSP Int'l Airport in 1938.
+* The GHCN data source (see below) does not seem to have the data for the previous weather station.
+* The GHCN data source is not updated daily, meaning that it lags behind a few days.
+* Historical data sources do not contain today's data.
+* The GSOD data (see below) does not have snow data.
+
+### Data sources
 
 * [NOAA Climatological Normals](http://www.ncdc.noaa.gov/oa/climate/normals/usnormals.html) (1981-2010): "Climate Normals are the latest three-decade averages of climatological variables, including temperature and precipitation."
     * [What are Normals](http://www.ncdc.noaa.gov/oa/climate/normals/usnormals.html#WHATARENORMALS).
     * [Use of Normals](http://www.ncdc.noaa.gov/oa/climate/normals/usnormals.html#NORMALSUSAGE).  "Meteorologists and climatologists regularly use Normals for placing recent climate conditions into a historical context."
 * "[Global Historical Climate Network](ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/readme.txt) (GHCN) includes daily observations from around the world. The dataset includes observations from World Meteorological Organization, Cooperative, and CoCoRaHS networks."
     * GHCN does not contain an average temperature, so we use an average of the high and low.
-    * GHCN contains snowfall data (while GSOD does not).
     * GHCN is not up to date and usually lags a few days behind the current date.
     * [GHCN list of stations](ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/ghcnd-stations.txt)
         * The GHCN Station ID for Minneapolis/St. Paul (MSP) airport is [USW00014922](http://www1.ncdc.noaa.gov/pub/data/normals/1981-2010/products/station/USW00014922.normals.txt).  This can be used for the GHCN and Normals sets (though the GSOD identifiers are different).
-* [Global Surface Summary of Day](http://www.ncdc.noaa.gov/cgi-bin/res40.pl?page=gsod.html) (GSOD) which is a global collection of recorded conditions each day.
+* (No longer used) [Global Surface Summary of Day](http://www.ncdc.noaa.gov/cgi-bin/res40.pl?page=gsod.html) (GSOD) which is a global collection of recorded conditions each day.
     * GSOD is used to fill in the most recent data.
-    * GSOD does contain an average
+    * GSOD does contain an average.
+    * GSOD does not contain snowfall data.
+    * GSOD is updated at leat once a day, but its data should not be used for today.
+* Minnesota Climatology Office [Historical Climate Data Listings for the Twin Cities datasets](http://climate.umn.edu/doc/twin_cities/twin_cities.htm) is used for daily data prior to 1938.
+* [Preliminary Monthly Climate Data](http://www.nws.noaa.gov/climate/f6.php?wfo=mpx) provided by the NOAA National Weather Service (NWS)is used to fill in come gaps for recent history (last couple weeks).
 * For current day data, we use ????.  
 
 ## Data processing

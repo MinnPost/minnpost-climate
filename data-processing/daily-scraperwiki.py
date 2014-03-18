@@ -19,6 +19,12 @@
 # ftp://ftp.ncdc.noaa.gov/pub/data/gsod/readme.txt
 # ftp://ftp.ncdc.noaa.gov/pub/data/gsod/2014/726580-14922-2014.op.gz
 #
+# For Twin Cities historical climate data we use the State Climatology Office
+# which is through the U of M:
+# http://climate.umn.edu/
+# Twin Cities data sources:
+# http://climate.umn.edu/doc/twin_cities/twin_cities.htm
+#
 # The finally for the most recent day, use ????
 
 import scraperwiki
@@ -27,7 +33,9 @@ import urllib2
 import StringIO
 import dateutil.parser
 import json
+from BeautifulSoup import BeautifulSoup
 from datetime import datetime, date, timedelta
+from dateutil.relativedelta import relativedelta
 
 
 class DailyWeatherScraper:
@@ -35,13 +43,16 @@ class DailyWeatherScraper:
   # Stations
   stations = [
     # MSP Airport, GHCN ID, GSOD ID
-    ('USW00014922', '726580-14922', 'KMSP')
+    ('USW00014922', '726580-14922', 'KMSP', 'MPX', 'MSP')
   ]
 
   # URL templates
   ghcn_url_template = 'ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/all/%(ghcn_station)s.dly'
   normals_url_template = 'http://www1.ncdc.noaa.gov/pub/data/normals/1981-2010/products/station/%(ghcn_station)s.normals.txt'
   gsod_url_template = 'ftp://ftp.ncdc.noaa.gov/pub/data/gsod/%(year)s/%(gsod_station)s-%(year)s.op.gz'
+  mn_url_template = 'http://climate.umn.edu/doc/twin_cities/msp%(mn_decade)s\'s.htm'
+  mn_decades = range(1870, 2010, 10)
+  nws_monthly_url_template = 'http://www.nws.noaa.gov/climate/getclimate.php?date=&wfo=%(wfo_id)s&sid=%(sid_id)s&pil=CF6&recent=&specdate=%(end_month_date)s+11:11:11'
 
   # Measurements to keep
   ghcn_measurements = ['tmax', 'tmin', 'prcp', 'snow', 'snwd']
@@ -99,11 +110,17 @@ class DailyWeatherScraper:
 
   # Convert celsius to fahrenheit
   def to_fahrenheit(self, c):
-    return (c * 9/5) + 32
+    return (c * 1.8) + 32
 
   # Convert mm to inches
   def to_inches_from_mm(self, mm):
     return mm / 25.4
+
+  # Get last day of month of a date
+  def last_day_of_month(self, d):
+    # Add month and subtract a day from the first of the month
+    d = date(d.year, d.month, 1)
+    return d + relativedelta(months = 1) - timedelta(days = 1)
 
 
 
@@ -122,10 +139,10 @@ class DailyWeatherScraper:
       return response
 
   # Read url
-  def read_url(self, url):
+  def read_url(self, url, readlines = True):
     try:
       file = self.open_remote_file(url)
-      data = file.readlines()
+      data = file.readlines() if readlines else file
       return data
     except urllib2.URLError:
       print "Could not find file for station %s: %s." % (self.station, url)
@@ -239,7 +256,8 @@ class DailyWeatherScraper:
             if element in ['prcp', 'snow', 'snwd']:
               data[element] = round(self.to_inches_from_mm(data[element]), 2)
 
-            # Save
+            # Save to GHCN and observations tables
+            self.update_data(data, ['station', 'year', 'month', 'day'], 'ghcn')
             self.update_data(data, ['station', 'year', 'month', 'day'], 'observations')
 
     print 'Done parsing GHCN file for station: %s' % self.station[0]
@@ -356,7 +374,7 @@ class DailyWeatherScraper:
           data['year'] = self.read_number_value(line[14:18])
           data['month'] = self.read_number_value(line[18:20])
           data['day'] = self.read_number_value(line[20:22])
-          data['temp'] = self.read_number_value(line[24:30], [9999.9])
+          data['tavg'] = self.read_number_value(line[24:30], [9999.9])
           #data['temp_count'] = read_number_value(line[31:33])
           #data['dew'] = read_number_value(line[35:41], 9999.9)
           #data['dew_count'] = read_number_value(line[42:44])
@@ -385,12 +403,121 @@ class DailyWeatherScraper:
           #data['tornado'] = read_binary_value(line[137:138])
           data['date'] = dateutil.parser.parse('%s-%s-%s' % (data['year'], data['month'], data['day'])).date()
 
-          # Save the data
+          # Save the data to a gsod table and non-destructively add to observations
           if self.isRecent and data['date'] >= self.recent:
+            self.update_data(data, ['station', 'year', 'month', 'day'], 'gsod')
             self.update_data(data, ['station', 'year', 'month', 'day'], 'observations', True)
 
       print 'Done parsing GSOD file for station: %s and year: %s' % (self.station[1], year)
 
+
+
+  # Process U of M Climate data.  It is an HTML document with each line
+  # as a day as tab delimited
+  def process_mn_climate(self):
+    # Read in each decade
+    for decade in self.mn_decades:
+      print 'Reading U of M Climate file for decade: %s' % decade
+      file = self.read_url(self.mn_url_template % { 'mn_decade': decade }, True)
+      html = BeautifulSoup(''.join(file))
+
+      # Get the text from the page
+      print 'Parsing U of M Climate file for decade: %s' % decade
+      text = html('font', face = 'Courier New')[0].contents[0]
+      lines = text.split('\r\n')
+      for l in lines:
+        # Aw, the joys of scraping.  Things are /t delimited, well, except for
+        # some.
+        l = l.replace('    ', '\t')
+        line = l.strip().split('\t')
+
+        # Make data if we have a date
+        if line[0] is not None and line[0] != '' and self.is_number(line[0]) and self.parse_num(line[0]) > 0:
+          data = {}
+          data['station'] = self.station[0]
+          data['source'] = 'mn_climate'
+          data['mn_climate_station'] = 'twin_cities'
+          data['year'] = self.parse_num(line[0])
+          data['month'] = self.parse_num(line[1])
+          data['day'] = self.parse_num(line[2])
+          data['tmax'] = self.read_mn_climate_value(line[3])
+          data['tmin'] = self.read_mn_climate_value(line[4])
+          data['prcp'] = self.read_mn_climate_value(line[5])
+          data['snow'] = self.read_mn_climate_value(line[6])
+          data['snwd'] = self.read_mn_climate_value(line[7])
+          data['date'] = dateutil.parser.parse('%s-%s-%s' % (data['year'], data['month'], data['day'])).date()
+
+          # Save data to mn_climates table and non-destructively to observations
+          self.update_data(data, ['station', 'year', 'month', 'day'], 'mn_climate')
+          self.update_data(data, ['station', 'year', 'month', 'day'], 'observations', True)
+
+      print 'Done parsing U of M Climate file for decade: %s' % decade
+
+
+  # Handle flags
+  def read_mn_climate_value(self, value):
+    # M is missing value
+    if value.lower() == 'm':
+      value = None
+    # Trace amounts are very litte, less than 0.1.  So, we use something that
+    # may affect rounding and that's it
+    elif value.lower() == 't':
+      value = 0.001
+
+    return self.parse_num(value) if value is not None else value
+
+
+
+  # Process out the monthly reports from the National Weather Service
+  def process_nws_monthly(self):
+    section_starter = '============================='
+
+    # We need to determine what months are needed, then get the last date of
+    # that month :(
+    last_month_days = []
+    last_month_days.append(self.last_day_of_month(self.date))
+    if self.recent.month != self.date.month:
+      last_month_days.append(self.last_day_of_month(self.recent))
+
+    # Go through each last day and read in file
+    for last_day in last_month_days:
+      print 'Reading NWS monthly data for %s-%s for station: %s,%s' % (last_day.year, last_day.month, self.station[3], self.station[4])
+      url_date = '%s-%s-%s' % (last_day.year, last_day.month, last_day.day)
+      url = self.nws_monthly_url_template % { 'wfo_id': self.station[3], 'sid_id': self.station[4], 'end_month_date': url_date }
+      file = self.read_url(url, True)
+      html = BeautifulSoup(''.join(file))
+
+      # Get the text from the HTML
+      print 'Parsing NWS monthly data for %s-%s for station: %s,%s' % (last_day.year, last_day.month, self.station[3], self.station[4])
+      text = html('font', size = '3')[0].contents[0]
+      lines = text.split('\n')
+      section_counter = 0
+
+      # Make month data
+      month_data = {}
+      month_data['source'] = 'nws'
+      month_data['station'] = self.station[0]
+      month_data['wfo'] = self.station[3]
+      month_data['year'] = last_day.year
+      month_data['month'] = last_day.month
+
+      # Go through each line, we only want to read what is in the third section
+      for l in lines:
+        if l.startswith(section_starter):
+          section_counter = section_counter + 1
+        elif section_counter == 2 and l != '' and l is not None:
+          data = month_data.copy()
+          data['day'] = self.parse_num(l[0:2].strip())
+          data['tmax'] = self.read_mn_climate_value(l[2:6].strip())
+          data['tmin'] = self.read_mn_climate_value(l[6:10].strip())
+          data['tavg'] = self.read_mn_climate_value(l[10:14].strip())
+          data['prcp'] = self.read_mn_climate_value(l[26:31].strip())
+          data['snow'] = self.read_mn_climate_value(l[31:36].strip())
+          data['snwd'] = self.read_mn_climate_value(l[36:41].strip())
+
+          # Save data to own table and observations
+          self.update_data(data, ['station', 'year', 'month', 'day'], 'nws')
+          self.update_data(data, ['station', 'year', 'month', 'day'], 'observations', True)
 
 
 
@@ -404,6 +531,7 @@ class DailyWeatherScraper:
       self.station = s
       self.process_ghcn()
       self.process_normals()
+      self.process_mn_climate()
 
 
   # Process recent records
@@ -414,7 +542,7 @@ class DailyWeatherScraper:
       self.station = s
       self.process_ghcn()
       self.process_gsod()
-
+      self.process_nws_monthly()
 
 
 
