@@ -1,31 +1,8 @@
 #!/usr/bin/env python
 
 # Meant for ScraperWiki
-
-# Scrapes NOAA data to get observation and normals data for specific stations
-#
-# Unfortunately this is put together with multiple different datasets:
-#
-# For historical observations, use NOAA NCDC Global Historical
-# Climate Network (GHCN)
-# ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/readme.txt
-# ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/all/USW00014922.dly
-#
-# For Normals use NOAA NCDC Normals
-# http://www1.ncdc.noaa.gov/pub/data/normals/1981-2010/readme.txt
-#
-# The GHCN data is missing the most recent two weeks (about), so
-# this is supplemented with NOAA Global Surface Summary Data (GSOD)
-# ftp://ftp.ncdc.noaa.gov/pub/data/gsod/readme.txt
-# ftp://ftp.ncdc.noaa.gov/pub/data/gsod/2014/726580-14922-2014.op.gz
-#
-# For Twin Cities historical climate data we use the State Climatology Office
-# which is through the U of M:
-# http://climate.umn.edu/
-# Twin Cities data sources:
-# http://climate.umn.edu/doc/twin_cities/twin_cities.htm
-#
-# The finally for the most recent day, use ????
+# See the following about the data sources used here:
+# https://github.com/MinnPost/minnpost-climate#data
 
 import scraperwiki
 import gzip
@@ -33,6 +10,7 @@ import urllib2
 import StringIO
 import dateutil.parser
 import json
+import pytz
 from BeautifulSoup import BeautifulSoup
 from datetime import datetime, date, timedelta
 from dateutil.relativedelta import relativedelta
@@ -53,6 +31,7 @@ class DailyWeatherScraper:
   mn_url_template = 'http://climate.umn.edu/doc/twin_cities/msp%(mn_decade)s\'s.htm'
   mn_decades = range(1870, 2010, 10)
   nws_monthly_url_template = 'http://www.nws.noaa.gov/climate/getclimate.php?date=&wfo=%(wfo_id)s&sid=%(sid_id)s&pil=CF6&recent=&specdate=%(end_month_date)s+11:11:11'
+  nws_recent_url_template = 'http://w1.weather.gov/data/obhistory/%(airport_id)s.html'
 
   # Measurements to keep
   ghcn_measurements = ['tmax', 'tmin', 'prcp', 'snow', 'snwd']
@@ -69,16 +48,23 @@ class DailyWeatherScraper:
   # Constructor
   def __init__(self):
     self.isRecent = False
-    self.year = date.today().year
-    self.date = date.today()
-    self.recent = date.today() - timedelta(days = 30)
+    self.now = datetime.now(pytz.timezone('US/Central'))
+    self.date = self.now.date()
+    self.today = self.now.date()
+    self.year = self.date.year
+    self.recent = self.today - timedelta(days = 30)
     self.recent_year = self.recent.year
+    self.tables = []
 
 
 
   # Parse out a number
   def parse_num(self, x):
     found = None
+
+    if x is None:
+      return None
+
     try:
       found = int(x)
     except ValueError:
@@ -156,8 +142,6 @@ class DailyWeatherScraper:
 
   # Update data in a way that is not destructive
   def update_data(self, data, keys, table = 'swdata', doNotOverwriteGHCN = False):
-    tables = scraperwiki.sqlite.show_tables()
-
     # Make find query
     query = "* FROM %s WHERE " % table
     where = []
@@ -170,7 +154,11 @@ class DailyWeatherScraper:
 
     # Save.  We have to get the current data so that it does not
     # overwrite things
-    if table in tables:
+    if table in self.tables or table in scraperwiki.sqlite.show_tables():
+      # Store that we found the table locally so we don't have to query
+      # everytime
+      self.tables.append(table)
+
       current = scraperwiki.sqlite.select(query)
       if len(current) > 0:
         current = current[0]
@@ -514,12 +502,79 @@ class DailyWeatherScraper:
           data['prcp'] = self.read_mn_climate_value(l[26:31].strip())
           data['snow'] = self.read_mn_climate_value(l[31:36].strip())
           data['snwd'] = self.read_mn_climate_value(l[36:41].strip())
+          data['date'] = dateutil.parser.parse('%s-%s-%s' % (data['year'], data['month'], data['day'])).date()
 
           # Save data to own table and observations
           self.update_data(data, ['station', 'year', 'month', 'day'], 'nws')
           self.update_data(data, ['station', 'year', 'month', 'day'], 'observations', True)
 
 
+
+
+
+
+
+  # Process out the 3 day report from the National Weather Service
+  def process_nws_recent(self):
+    print 'Reading NWS recent data for station: %s' % (self.station[2])
+    file = self.read_url(self.nws_recent_url_template % { 'airport_id': self.station[2] }, True)
+    html = BeautifulSoup(''.join(file))
+
+    # Set up data to save and amounts to check
+    total_temp = []
+    data = {}
+    data['source'] = 'nws_recent'
+    data['station'] = self.station[0]
+    data['nws_airpot'] = self.station[2]
+    data['year'] = self.today.year
+    data['month'] = self.today.month
+    data['day'] = self.today.day
+    data['date'] = dateutil.parser.parse('%s-%s-%s' % (data['year'], data['month'], data['day'])).date()
+    data['tmin'] = 999999
+    data['tmax'] = -999999
+    data['prcp'] = 0
+
+    # Parse the HTML and find the relevant data
+    print 'Parsing NWS recent data for station: %s' % (self.station[2])
+    table = html.find('table', cellspacing = '3', cellpadding = '2', border = '0', width = '670')
+    rows = table.findAll('tr')
+    for r in rows:
+      cols = r.findAll('td')
+
+      # Find entries that are numbers and the same as today's date
+      if len(cols) > 15 and cols[0].string is not None and self.is_number(cols[0].string) and self.parse_num(cols[0].string) == self.today.day:
+        # Add total temp
+        temp = self.parse_num(cols[6].string)
+        if temp is not None:
+          total_temp.append(temp)
+
+        # Maximum
+        tmax = self.parse_num(cols[8].string)
+        if tmax is not None:
+          data['tmax'] = tmax if tmax > data['tmax'] else data['tmax']
+        elif temp is not None:
+          data['tmax'] = temp if temp > data['tmax'] else data['tmax']
+
+        # Minimum
+        tmin = self.parse_num(cols[9].string)
+        if tmin is not None:
+          data['tmin'] = tmin if tmin < data['tmin'] else data['tmin']
+        elif temp is not None:
+          data['tmin'] = temp if temp < data['tmin'] else data['tmin']
+
+        # Precipitation
+        prcp = self.parse_num(cols[15].string)
+        if prcp is not None:
+          data['prcp'] = data['prcp'] + prcp
+
+    # Only save if we have data
+    print 'Done parsing NWS recent data for station: %s' % (self.station[2])
+    if len(total_temp) > 0:
+      data['tavg'] = (sum(total_temp) * 1.0)/len(total_temp)
+
+      # Save to observations and nws recent
+      self.update_data(data, ['station', 'year', 'month', 'day'], 'nws_recent')
+      self.update_data(data, ['station', 'year', 'month', 'day'], 'observations', True)
 
 
 
@@ -543,7 +598,7 @@ class DailyWeatherScraper:
       self.process_ghcn()
       self.process_gsod()
       self.process_nws_monthly()
-
+      self.process_nws_recent()
 
 
 # Main execution
