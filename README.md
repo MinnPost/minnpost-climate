@@ -26,14 +26,20 @@ Ultimately what we want is a daily summary for every day (including today) for a
     * GHCN is not up to date and usually lags a few days behind the current date.
     * [GHCN list of stations](ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/ghcnd-stations.txt)
         * The GHCN Station ID for Minneapolis/St. Paul (MSP) airport is [USW00014922](http://www1.ncdc.noaa.gov/pub/data/normals/1981-2010/products/station/USW00014922.normals.txt).  This can be used for the GHCN and Normals sets (though the GSOD identifiers are different).
-* (No longer used) [Global Surface Summary of Day](http://www.ncdc.noaa.gov/cgi-bin/res40.pl?page=gsod.html) (GSOD) which is a global collection of recorded conditions each day.
+* Minnesota Climatology Office [Historical Climate Data Listings for the Twin Cities datasets](http://climate.umn.edu/doc/twin_cities/twin_cities.htm) is used for daily data prior to 1938.
+* [Preliminary Monthly Climate Data](http://www.nws.noaa.gov/climate/f6.php?wfo=mpx) provided by the NOAA National Weather Service (NWS) is used to fill in come gaps for recent history (last couple weeks).
+* [Feeds of Current Weather Conditions](http://w1.weather.gov/xml/current_obs/seek.php) provided by the NOAA National Weather Service (NWS) is used to get today's observations.  
+* [Global Surface Summary of Day](http://www.ncdc.noaa.gov/cgi-bin/res40.pl?page=gsod.html) (GSOD) which is a global collection of recorded conditions each day.
     * GSOD is used to fill in the most recent data.
     * GSOD does contain an average.
     * GSOD does not contain snowfall data.
     * GSOD is updated at leat once a day, but its data should not be used for today.
-* Minnesota Climatology Office [Historical Climate Data Listings for the Twin Cities datasets](http://climate.umn.edu/doc/twin_cities/twin_cities.htm) is used for daily data prior to 1938.
-* [Preliminary Monthly Climate Data](http://www.nws.noaa.gov/climate/f6.php?wfo=mpx) provided by the NOAA National Weather Service (NWS)is used to fill in come gaps for recent history (last couple weeks).
-* For current day data, we use ????.  
+    * GSOD is used specifically in case we can't get data for recent days through other sources.
+
+### Other
+
+* The CLIMATE tool should have combined data: http://mrcc.isws.illinois.edu/CLIMATE/.
+* For long term record checking, see http://threadex.rcc-acis.org/.
 
 ## Data processing
 
