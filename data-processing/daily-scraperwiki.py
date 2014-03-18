@@ -241,7 +241,9 @@ class DailyWeatherScraper:
             data[element] = float(data[element])
             if element in ['tmax', 'tmin']:
               data[element] = round(self.to_fahrenheit(data[element] / 10), 2)
-            if element in ['prcp', 'snow', 'snwd']:
+            if element in ['prcp']:
+              data[element] = round(self.to_inches_from_mm(data[element] / 10), 2)
+            if element in ['snow', 'snwd']:
               data[element] = round(self.to_inches_from_mm(data[element]), 2)
 
             # Save to GHCN and observations tables
@@ -604,5 +606,5 @@ class DailyWeatherScraper:
 # Main execution
 if __name__ == '__main__':
   scraper = DailyWeatherScraper()
-  #scraper.process_historical()
+  scraper.process_historical()
   scraper.process_recent()
