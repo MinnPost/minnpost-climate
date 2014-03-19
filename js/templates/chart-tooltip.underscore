@@ -1,5 +1,5 @@
 <div class="chart-tooltip">
-  <strong><%= Highcharts.dateFormat('%A, %b %e, %Y', data.key) %></strong><br/>
+  <strong><%= Highcharts.dateFormat('%A, %b. %e, %Y', data.key) %></strong><br/>
   <%= data.series.name %>: <%= Math.round(data.y * 10) / 10 %>&deg;F <br />
   <br />
   Average temperature: <%= Math.round(data.point.tavg * 10) / 10 %>&deg;F <br />

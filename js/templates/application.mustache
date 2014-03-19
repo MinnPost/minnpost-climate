@@ -66,7 +66,7 @@
 
       <p>
         This {{ season }}
-        ({{ seasonSpan.start.format('MMM Do') }} - {{ seasonSpan.end.subtract(1, 'days').format('MMM DD') }})
+        ({{ seasonSpan.start.format('MMM. Do') }} - {{ seasonSpan.end.subtract(1, 'days').format('MMM. DD') }})
         has been about
         <strong>
           {{ Math.abs(Math.round(sectionSeason.avgTempDiff * 10) / 10) }}&deg;F
