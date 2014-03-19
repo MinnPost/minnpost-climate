@@ -31,7 +31,7 @@
       <h3>Last week</h3>
 
       <p>
-        This past week (7 days) was about
+        This past week (7 days) was, on average, about
         <strong>
           {{ Math.abs(Math.round(sectionWeek.avgTempDiff * 10) / 10) }}&deg;F
           {{#(sectionWeek.avgTempDiff > 0)}} warmer {{/()}}
@@ -48,7 +48,7 @@
       <h3>Last 30 days</h3>
 
       <p>
-        The past month (30 days) has been about
+        The past month (30 days) was, on average, about
         <strong>
           {{ Math.abs(Math.round(sectionMonth.avgTempDiff * 10) / 10) }}&deg;F
           {{#(sectionMonth.avgTempDiff > 0)}} warmer {{/()}}
@@ -67,7 +67,7 @@
       <p>
         This {{ season }}
         ({{ seasonSpan.start.format('MMM. Do') }} - {{ seasonSpan.end.subtract(1, 'days').format('MMM. DD') }})
-        has been about
+        was, on average, about
         <strong>
           {{ Math.abs(Math.round(sectionSeason.avgTempDiff * 10) / 10) }}&deg;F
           {{#(sectionSeason.avgTempDiff > 0)}} warmer {{/()}}
