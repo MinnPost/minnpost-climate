@@ -479,6 +479,13 @@ class DailyWeatherScraper:
 
       # Get the text from the HTML
       print 'Parsing NWS monthly data for %s-%s for station: %s,%s' % (last_day.year, last_day.month, self.station[3], self.station[4])
+
+      # Ensure that there is data
+      if len(html('h2')) > 0 and 'no records' in html('h2')[0].contents[0]:
+        print 'No data found in NWS monthly data for %s-%s for station: %s,%s' % (last_day.year, last_day.month, self.station[3], self.station[4])
+        return
+
+      # Parse valid data
       text = html('font', size = '3')[0].contents[0]
       lines = text.split('\n')
       section_counter = 0
@@ -606,5 +613,5 @@ class DailyWeatherScraper:
 # Main execution
 if __name__ == '__main__':
   scraper = DailyWeatherScraper()
-  scraper.process_historical()
+  #scraper.process_historical()
   scraper.process_recent()
