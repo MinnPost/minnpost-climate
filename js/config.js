@@ -6,10 +6,13 @@ require.config({
   shim: {
     'Highcharts': {
       exports: 'Highcharts',
-      'deps': [ 'jquery']
+      deps: [ 'jquery']
     },
     'HighchartsMore': {
-      'deps': [ 'Highcharts']
+      deps: [ 'Highcharts']
+    },
+    'jquery.inputmask': {
+      deps: [ 'jquery']
     }
   },
   baseUrl: 'js',
@@ -17,6 +20,7 @@ require.config({
     'requirejs': '../bower_components/requirejs/require',
     'text': '../bower_components/text/text',
     'jquery': '../bower_components/jquery/jquery.min',
+    'jquery.inputmask': '../bower_components/jquery.inputmask/dist/jquery.inputmask.bundle.min',
     'moment': '../bower_components/moment/min/moment.min',
     'underscore': '../bower_components/underscore/underscore',
     'Backbone': '../bower_components/backbone/backbone',

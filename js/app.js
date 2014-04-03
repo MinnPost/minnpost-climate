@@ -5,7 +5,7 @@
  * and creates the main object for the application.
  */
 define('minnpost-climate', [
-  'underscore', 'jquery', 'moment',
+  'underscore', 'jquery', 'jquery.inputmask', 'moment',
   'Ractive', 'Ractive-events-tap',
   'Highcharts', 'HighchartsMore',
   'helpers', 'routers',
@@ -13,7 +13,7 @@ define('minnpost-climate', [
   'text!templates/chart-tooltip.underscore',
   'text!templates/application.mustache'
 ],
-  function(_, $, moment, Ractive, R1, Highcharts, H1, helpers, routers, tLoading, tTooltip, tApp) {
+  function(_, $, $im, moment, Ractive, R1, Highcharts, H1, helpers, routers, tLoading, tTooltip, tApp) {
   // Preprocess some templates
   tTooltip = _.template(tTooltip);
 
@@ -47,6 +47,7 @@ define('minnpost-climate', [
 
     // Show specific date
     renderDate: function(date) {
+      var thisApp = this;
       this.date = date;
       this.isToday = (date.isSame(this.today, 'day'));
 
@@ -64,7 +65,8 @@ define('minnpost-climate', [
           isToday: this.isToday,
           date: date,
           options: this.options,
-          helpers: helpers
+          helpers: helpers,
+          hasValidInput: false
         },
         partials: {
           loading: tLoading
@@ -73,6 +75,26 @@ define('minnpost-climate', [
 
       // Respond to view events
       this.view.observe('computed', function(n, o) {
+        // Handle inputs
+        this.$el.find('.date-input').inputmask('yyyy-mm-dd', {
+          yearrange: { minyear: 1850, maxyear: 2099 },
+          oncomplete: function() {
+            thisApp.view.set('hasValidInput', true);
+          },
+          onincomplete: function() {
+            thisApp.view.set('hasValidInput', false);
+          },
+          oncleared: function() {
+            thisApp.view.set('hasValidInput', false);
+          }
+        });
+        this.$el.find('form').on('submit', function(e) {
+          e.preventDefault();
+          thisApp.router.navigate('date/' +
+            $(this).find('.date-input').val(), { trigger: true });
+        });
+
+        // Draw charts
         this.drawCharts();
       }, { init: false, defer: true, context: this });
 

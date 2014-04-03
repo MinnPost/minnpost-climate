@@ -73,5 +73,12 @@
     ],
     "rname": "HighchartsMore",
     "returns": "HighchartsMore"
+  },
+  "jquery.inputmask": {
+    "js": [
+      "jquery.inputmask/dist/jquery.inputmask.bundle.min"
+    ],
+    "rname": "jquery.inputmask",
+    "returns": "jquery.inputmask"
   }
 }

@@ -75,9 +75,53 @@ body .node-unpublished {
 
   .not-today {
     text-align: center;
+    color: #434343;
     font-family: $sans-serif-font-other;
     font-size: 1.5em;
-    margin: 1em 0 2em 0;
+    margin: 1em 0 1em 0;
+  }
+
+  .date-input-form {
+    font-size: 1.3em;
+    margin-bottom: 2em;
+    text-align: center;
+
+    button,
+    input.date-input {
+      @include inline-block();
+      color: #434343;
+      border: 1px solid #9e9e9e;
+    }
+
+    input.date-input {
+      text-align: left;
+      padding: .25em .5em;
+      vertical-align: middle;
+      @include box-shadow(inset 0 1px 1px rgba(0,0,0,.075));
+    }
+
+    button {
+      text-align: center;
+      vertical-align: middle;
+      cursor: pointer;
+      background-image: none;
+      background-color: #FFFFFF;
+      line-height: 2.6em;
+      white-space: nowrap;
+      padding: .25em 1em;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      user-select: none;
+
+      &[disabled],
+      &.disabled {
+        cursor: not-allowed;
+        pointer-events: none;
+        opacity: .65;
+        filter: "alpha(opacity=65)";
+      }
+    }
+
   }
 
   .section-section {

@@ -24,6 +24,7 @@
     "requirejs": "~2.1.9",
     "text": "~2.0.10",
     "moment": "~2.5.1",
-    "highcharts": "~3.0.7"
+    "highcharts": "~3.0.7",
+    "jquery.inputmask": "~2.5.0"
   }
 }

@@ -12,6 +12,10 @@
       <div class="not-today">
         Showing weather trends from <strong>{{ date.format('dddd, MMM. Do, YYYY') }}</strong>.
       </div>
+      <form class="date-input-form">
+        <input type="text" class="date-input" />
+        <button type="submit" disabled="{{^hasValidInput}}disabled{{/hasValidInput}}">Change date</button>
+      </form>
     {{/isToday}}
 
     <div class="section-section">
@@ -81,6 +85,16 @@
 
       <div class="chart chart-section-season"></div>
     </div>
+
+    {{#isToday}}
+      <div class="not-today">
+        Enter a date in the past to see the weather trends for a specific day.
+      </div>
+      <form class="date-input-form">
+        <input type="text" class="date-input" />
+        <button type="submit" disabled="{{^hasValidInput}}disabled{{/hasValidInput}}">Change date</button>
+      </form>
+    {{/isToday}}
 
   {{/computed}}
 

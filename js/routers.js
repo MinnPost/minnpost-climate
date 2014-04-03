@@ -29,7 +29,12 @@ define('routers', ['jquery', 'underscore', 'Backbone', 'moment'],
     // Route for specific date.  Ensure it is a valid date.
     routeDate: function(date) {
       date = (date === 'today') ? moment() : moment(date);
-      date = (date.isValid()) ? date : moment();
+
+      if (!date.isValid()) {
+        this.routeDefault();
+        return;
+      }
+
       this.app.renderDate(date);
     }
   });
