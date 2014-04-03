@@ -167,11 +167,50 @@ define('helpers', ['jquery', 'underscore'],
   };
 });
 
+/**
+ * Routers
+ */
+define('routers', ['jquery', 'underscore', 'Backbone', 'moment'],
+  function($, _, Backbone, moment) {
+  routers = {};
+
+  // Make class for router
+  routers.AppRouter = Backbone.Router.extend({
+    routes: {
+      'date/:date': 'routeDate',
+      '*defaultR': 'routeDefault'
+    },
+
+    initialize: function(options) {
+      this.app = options.app;
+    },
+
+    // Start application, specifically the Backbone mechanims
+    start: function() {
+      Backbone.history.start();
+    },
+
+    // Default route
+    routeDefault: function() {
+      this.navigate('/date/today', { trigger: true, replace: true });
+    },
+
+    // Route for specific date.  Ensure it is a valid date.
+    routeDate: function(date) {
+      date = (date === 'today') ? moment() : moment(date);
+      date = (date.isValid()) ? date : moment();
+      this.app.renderDate(date);
+    }
+  });
+
+  return routers;
+});
+
 define('text!templates/loading.mustache',[],function () { return '<div class="loading-container">\n  <div class="loading"><span>Loading...</span></div>\n</div>';});
 
 define('text!templates/chart-tooltip.underscore',[],function () { return '<div class="chart-tooltip">\n  <strong><%= Highcharts.dateFormat(\'%A, %b. %e, %Y\', data.key) %></strong><br/>\n  <%= data.series.name %>: <%= Math.round(data.y * 10) / 10 %>&deg;F <br />\n  <br />\n  Average temperature: <%= Math.round(data.point.tavg * 10) / 10 %>&deg;F <br />\n  High and low temperature: <%= Math.round(data.point.tmax * 10) / 10 %> - <%= Math.round(data.point.tmin * 10) / 10 %>&deg;F<br />\n  <br />\n  Normal avg. temperature: <%= Math.round(data.point.ntavg * 10) / 10 %>&deg;F <br />\n  Normal avg. high and low: <%= Math.round(data.point.ntmax * 10) / 10 %> - <%= Math.round(data.point.ntmin * 10) / 10 %>&deg;F<br />\n</div>\n';});
 
-define('text!templates/application.mustache',[],function () { return '<div class="message-container"></div>\n\n<div class="content-container">\n\n  {{^computed}}\n    {{>loading}}\n  {{/computed}}\n\n  {{#computed}}\n\n    <div class="section-section">\n      <h3>\n        {{^isYesterday}} Today {{/isYesterday}}\n        {{#isYesterday}} Yesterday {{/isYesterday}}\n      </h3>\n      <p>\n        {{^isYesterday}} Today\'s average temperature so far is {{/isYesterday}}\n        {{#isYesterday}} Yesterday\'s average temperature was {{/isYesterday}}\n        about\n        <strong>\n          {{ Math.abs(Math.round(sectionToday.avgTempDiff * 10) / 10) }}&deg;F\n          {{#(sectionToday.avgTempDiff > 0)}} warmer {{/()}}\n          {{#(sectionToday.avgTempDiff < 0)}} colder {{/()}}\n        </strong>\n        than the normal temperature for this date ({{ sectionToday.days.0.ntavg }}&deg;F).\n      </p>\n    </div>\n\n\n    <div class="section-section">\n      <h3>Last week</h3>\n\n      <p>\n        This past week (7 days) was, on average, about\n        <strong>\n          {{ Math.abs(Math.round(sectionWeek.avgTempDiff * 10) / 10) }}&deg;F\n          {{#(sectionWeek.avgTempDiff > 0)}} warmer {{/()}}\n          {{#(sectionWeek.avgTempDiff < 0)}} colder {{/()}}\n        </strong>\n        each day than the normal average daily temperature.\n      </p>\n\n      <div class="chart chart-section-week"></div>\n    </div>\n\n\n    <div class="section-section">\n      <h3>Last 30 days</h3>\n\n      <p>\n        The past month (30 days) was, on average, about\n        <strong>\n          {{ Math.abs(Math.round(sectionMonth.avgTempDiff * 10) / 10) }}&deg;F\n          {{#(sectionMonth.avgTempDiff > 0)}} warmer {{/()}}\n          {{#(sectionMonth.avgTempDiff < 0)}} colder {{/()}}\n        </strong>\n        each day than the normal average temperature.\n      </p>\n\n      <div class="chart chart-section-month"></div>\n    </div>\n\n\n    <div class="section-section">\n      <h3>This {{ season }}</h3>\n\n      <p>\n        This {{ season }}\n        ({{ seasonSpan.start.format(\'MMM. Do\') }} - {{ seasonSpan.end.subtract(1, \'days\').format(\'MMM. DD\') }})\n        was, on average, about\n        <strong>\n          {{ Math.abs(Math.round(sectionSeason.avgTempDiff * 10) / 10) }}&deg;F\n          {{#(sectionSeason.avgTempDiff > 0)}} warmer {{/()}}\n          {{#(sectionSeason.avgTempDiff < 0)}} colder {{/()}}\n        </strong>\n        each day than the normal average temperature.\n      </p>\n\n      <div class="chart chart-section-season"></div>\n    </div>\n\n  {{/computed}}\n\n</div>\n\n<div class="footnote-container">\n  <div class="footnote">\n    <p><a href="http://www.ncdc.noaa.gov/oa/climate/normals/usnormals.html" target="_blank">Climate normals</a>, the baseline for comparison, are the latest three-decade (1981-2010) averages of climatological variables and are provided by the National Oceanic and Atmospheric Administration (NOAA).</p>\n\n    <p>Observation data for Minneapolis/St. Paul International Airport and data prior to 1938 is for downtown Minneapolis.  Data collected from\n      <a href="http://www.ncdc.noaa.gov/cgi-bin/res40.pl?page=gsod.html" target="_blank">NOAA National Climatic Data Center (NCDC) Global Surface Summary of Day (GSOD)</a>, <a href="http://www.ncdc.noaa.gov/oa/climate/ghcn-daily/" target="_blank">NOAA NCDC Global Historical Climatology Network (GHCN)</a>, <a href="http://climate.umn.edu/doc/twin_cities/twin_cities.htm" target="_blank">Minnesota Climatology Office Historical Climate Data Listings for the Twin Cities</a>, <a href="http://www.nws.noaa.gov/climate/f6.php?wfo=mpx" target="_blank">NOAA National Weather Service (NWS) Preliminary Monthly Climate Data</a>, and <a href="http://w1.weather.gov/xml/current_obs/seek.php" target="_blank">NOAA NWS Feeds of Current Weather Conditions</a>.</p>\n\n    <p>Some code, techniques, and data on <a href="https://github.com/minnpost/minnpost-climate" target="_blank">Github</a>. Calendar icon designed by Marcio Duarte from <a href="http://thenounproject.com/term/calendar/7134/" target="_blank">the Noun Project</a>.</p>\n\n  </div>\n</div>\n';});
+define('text!templates/application.mustache',[],function () { return '<div class="message-container"></div>\n\n<div class="content-container">\n\n  {{^computed}}\n    {{>loading}}\n  {{/computed}}\n\n  {{#computed}}\n\n    {{^isToday}}\n      <div class="not-today">\n        Showing weather trends from <strong>{{ date.format(\'dddd, MMM. Do, YYYY\') }}</strong>.\n      </div>\n    {{/isToday}}\n\n    <div class="section-section">\n      <h3>Today</h3>\n      <p>\n        {{#isToday}} Today\'s average temperature so far is {{/isToday}}\n        {{^isToday}} Today\'s average temperature was {{/isToday}}\n        about\n        <strong>\n          {{ Math.abs(Math.round(sectionToday.avgTempDiff * 10) / 10) }}&deg;F\n          {{#(sectionToday.avgTempDiff > 0)}} warmer {{/()}}\n          {{#(sectionToday.avgTempDiff < 0)}} colder {{/()}}\n        </strong>\n        than the normal temperature for this date ({{ sectionToday.days.0.ntavg }}&deg;F).\n      </p>\n    </div>\n\n\n    <div class="section-section">\n      <h3>Last week</h3>\n\n      <p>\n        This past week (7 days) was, on average, about\n        <strong>\n          {{ Math.abs(Math.round(sectionWeek.avgTempDiff * 10) / 10) }}&deg;F\n          {{#(sectionWeek.avgTempDiff > 0)}} warmer {{/()}}\n          {{#(sectionWeek.avgTempDiff < 0)}} colder {{/()}}\n        </strong>\n        each day than the normal average daily temperature.\n      </p>\n\n      <div class="chart chart-section-week"></div>\n    </div>\n\n\n    <div class="section-section">\n      <h3>Last 30 days</h3>\n\n      <p>\n        The past month (30 days) was, on average, about\n        <strong>\n          {{ Math.abs(Math.round(sectionMonth.avgTempDiff * 10) / 10) }}&deg;F\n          {{#(sectionMonth.avgTempDiff > 0)}} warmer {{/()}}\n          {{#(sectionMonth.avgTempDiff < 0)}} colder {{/()}}\n        </strong>\n        each day than the normal average temperature.\n      </p>\n\n      <div class="chart chart-section-month"></div>\n    </div>\n\n\n    <div class="section-section">\n      <h3>This {{ season }}</h3>\n\n      <p>\n        This {{ season }}\n        ({{ seasonSpan.start.format(\'MMM. Do\') }} - {{ seasonSpan.end.subtract(1, \'days\').format(\'MMM. DD\') }})\n        has been, on average, about\n        <strong>\n          {{ Math.abs(Math.round(sectionSeason.avgTempDiff * 10) / 10) }}&deg;F\n          {{#(sectionSeason.avgTempDiff > 0)}} warmer {{/()}}\n          {{#(sectionSeason.avgTempDiff < 0)}} colder {{/()}}\n        </strong>\n        each day than the normal average temperature.\n      </p>\n\n      <div class="chart chart-section-season"></div>\n    </div>\n\n  {{/computed}}\n\n</div>\n\n<div class="footnote-container">\n  <div class="footnote">\n    <p><a href="http://www.ncdc.noaa.gov/oa/climate/normals/usnormals.html" target="_blank">Climate normals</a>, the baseline for comparison, are the latest three-decade (1981-2010) averages of climatological variables and are provided by the National Oceanic and Atmospheric Administration (NOAA).</p>\n\n    <p>Observation data for Minneapolis/St. Paul International Airport and data prior to 1938 is for downtown Minneapolis.  Data collected from\n      <a href="http://www.ncdc.noaa.gov/cgi-bin/res40.pl?page=gsod.html" target="_blank">NOAA National Climatic Data Center (NCDC) Global Surface Summary of Day (GSOD)</a>, <a href="http://www.ncdc.noaa.gov/oa/climate/ghcn-daily/" target="_blank">NOAA NCDC Global Historical Climatology Network (GHCN)</a>, <a href="http://climate.umn.edu/doc/twin_cities/twin_cities.htm" target="_blank">Minnesota Climatology Office Historical Climate Data Listings for the Twin Cities</a>, <a href="http://www.nws.noaa.gov/climate/f6.php?wfo=mpx" target="_blank">NOAA National Weather Service (NWS) Preliminary Monthly Climate Data</a>, and <a href="http://w1.weather.gov/xml/current_obs/seek.php" target="_blank">NOAA NWS Feeds of Current Weather Conditions</a>.</p>\n\n    <p>Some code, techniques, and data on <a href="https://github.com/minnpost/minnpost-climate" target="_blank">Github</a>. Calendar icon designed by Marcio Duarte from <a href="http://thenounproject.com/term/calendar/7134/" target="_blank">the Noun Project</a>.</p>\n\n  </div>\n</div>\n';});
 
 /**
  * Main application file for: minnpost-climate
@@ -183,13 +222,12 @@ define('minnpost-climate', [
   'underscore', 'jquery', 'moment',
   'Ractive', 'Ractive-events-tap',
   'Highcharts', 'HighchartsMore',
-  'helpers',
+  'helpers', 'routers',
   'text!templates/loading.mustache',
   'text!templates/chart-tooltip.underscore',
   'text!templates/application.mustache'
 ],
-  function(_, $, moment, Ractive, R1, Highcharts, H1, helpers, tLoading, tTooltip, tApp) {
-
+  function(_, $, moment, Ractive, R1, Highcharts, H1, helpers, routers, tLoading, tTooltip, tApp) {
   // Preprocess some templates
   tTooltip = _.template(tTooltip);
 
@@ -207,18 +245,38 @@ define('minnpost-climate', [
 
     // Starter
     start: function() {
+      // Make dates.  The date property is the date we are looking at
       this.now = moment();
       this.today = moment(this.now.format('YYYY-MM-DD'));
       this.yesterday = moment(this.today).subtract(1, 'days');
+      this.date = moment(this.today);
 
       // We can store all the data in an array of days
       this.days = {};
+
+      // Create router
+      this.router = new routers.AppRouter({ app: this });
+      this.router.start();
+    },
+
+    // Show specific date
+    renderDate: function(date) {
+      this.date = date;
+      this.isToday = (date.isSame(this.today, 'day'));
+
+      // Reset some things
+      if (_.isObject(this.view)) {
+        this.view.teardown();
+        this.days = {};
+      }
 
       // Create view
       this.view = new Ractive({
         el: this.$el,
         template: tApp,
         data: {
+          isToday: this.isToday,
+          date: date,
           options: this.options,
           helpers: helpers
         },
@@ -233,27 +291,30 @@ define('minnpost-climate', [
       }, { init: false, defer: true, context: this });
 
       // Get recent observations
-      this.fetchRecentObservations().done(_.bind(this.dataLoaded, this));
+      this.fetchRecentObservations(date).done(_.bind(this.dataLoaded, this));
+    },
+
+    // Handle general error
+    handleError: function(message) {
+      this.router.routeDefault();
     },
 
     // Data loaded.  We need to know what the max day is that we
     // have before making other decisions
     dataLoaded: function(data) {
+      if (!_.isArray(data) || data.length < 30) {
+        this.handleError('Not enough data found.');
+        return;
+      }
+
       // Determine if we have today's or yesterday's data yet
       var max = _.max(data, function(d, di) {
         return moment(d.date, 'YYYY-MM-DD').unix();
       });
-      if (this.today.isSame(max.date)) {
-        this.isYesterday = false;
+      if (!this.date.isSame(max.date)) {
+        this.date = moment(max.date);
       }
-      else if (this.yesterday.isSame(max.date)) {
-        this.isYesterday = true;
-        this.today = max.date;
-      }
-      this.year = this.today.year();
-
-      // Set some data for views
-      this.view.set('isYesterday', this.isYesterday);
+      this.year = this.date.year();
 
       // Determine season
       this.determineSeason();
@@ -304,13 +365,13 @@ define('minnpost-climate', [
     // Make sections
     createSections: function() {
       var thisApp = this;
-      var startWeek = moment(this.today).subtract(7, 'days');
-      var startMonth = moment(this.today).subtract(30, 'days');
+      var startWeek = moment(this.date).subtract(7, 'days');
+      var startMonth = moment(this.date).subtract(30, 'days');
 
       // Just today
       this.sectionToday = this.computeSection(
         _.filter(this.days, function(d, di) {
-          return d.date.isSame(thisApp.today);
+          return d.date.isSame(thisApp.date);
         })
       );
 
@@ -343,7 +404,7 @@ define('minnpost-climate', [
       this.view.set('sectionMonth', this.sectionMonth);
       this.view.set('sectionSeason', this.sectionSeason);
 
-      // Mark as computer
+      // Mark as computed
       this.view.set('computed', true);
     },
 
@@ -373,11 +434,11 @@ define('minnpost-climate', [
     },
 
     // Fetch data about recent observations
-    fetchRecentObservations: function() {
+    fetchRecentObservations: function(date) {
       var thisApp = this;
       // Currently just use a general amount to ensure we have everything
       // but this could be change to be more accurate
-      var recent = this.now.subtract('months', 5);
+      var recent = moment(this.date).subtract('months', 5);
       var query = [];
 
       query.push("SELECT");
@@ -389,6 +450,7 @@ define('minnpost-climate', [
       query.push("  INNER JOIN normals AS n ON");
       query.push("    o.month = n.month AND o.day = n.day");
       query.push("WHERE o.date > DATE('" + recent.format('YYYY-MM-DD') + "')");
+      query.push("  AND o.date <= DATE('" + this.date.format('YYYY-MM-DD') + "')");
       var url = this.options.dailyObservationsPath.replace('[[[QUERY]]]', encodeURIComponent(query.join(' ')));
 
       // Make request
@@ -405,18 +467,31 @@ define('minnpost-climate', [
       });
     },
 
-    // Determine what season we are in
+    // Determine what season we are in.  This gets a bit messy when
+    // adjusting for the year
     determineSeason: function() {
       var thisApp = this;
-
-      // Adjust the season years
-      // TODO
+      var year = this.date.year();
 
       // Look to see what today is in.
       _.each(this.options.seasons, function(s, si) {
-        if ((thisApp.today.isAfter(s.start) ||
-          thisApp.today.isSame(s.start)) &&
-          thisApp.today.isBefore(s.end)) {
+        s.start.year(year);
+        s.end.year(year);
+
+        // But if winter ...
+        if (si === 'winter') {
+          if (thisApp.date.month() < 6) {
+            s.start.year(year - 1);
+          }
+          else {
+            s.end.year(year + 1);
+          }
+        }
+
+        // Check if within season range
+        if ((thisApp.date.isAfter(s.start) ||
+          thisApp.date.isSame(s.start)) &&
+          thisApp.date.isBefore(s.end)) {
           thisApp.season = si;
         }
       });
@@ -447,7 +522,7 @@ define('minnpost-climate', [
       // We have to determine if the month and day is this
       // year or last
       var date = moment([this.year, m - 1, d]);
-      var year = date.isAfter(this.today) ? this.year - 1 : this.year;
+      var year = date.isAfter(this.date) ? this.year - 1 : this.year;
       return moment([year, m - 1, d]);
     },
 

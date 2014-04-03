@@ -170,11 +170,13 @@ module.exports = function(grunt) {
       },
       // CSS Libs
       cssLibs: {
-        src: ['<%= _.map(_.compact(_.flatten(_.pluck(components, "css"))), function(c) { return "bower_components/" + c + ".css"; }) %>'],
+        //src: ['<%= _.map(_.compact(_.flatten(_.pluck(components, "css"))), function(c) { return "bower_components/" + c + ".css"; }) %>'],
+        src: [],
         dest: 'dist/<%= pkg.name %>.libs.css'
       },
       cssIeLibs: {
-        src: ['<%= _.map(_.compact(_.flatten(_.pluck(components, "ie"))), function(c) { return "bower_components/" + c + ".css"; }) %>'],
+        //src: ['<%= _.map(_.compact(_.flatten(_.pluck(components, "ie"))), function(c) { return "bower_components/" + c + ".css"; }) %>'],
+        src: [],
         dest: 'dist/<%= pkg.name %>.libs.ie.css'
       }
     },
