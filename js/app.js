@@ -8,13 +8,12 @@ define('minnpost-climate', [
   'underscore', 'jquery', 'moment',
   'Ractive', 'Ractive-events-tap',
   'Highcharts', 'HighchartsMore',
-  'helpers',
+  'helpers', 'routers',
   'text!templates/loading.mustache',
   'text!templates/chart-tooltip.underscore',
   'text!templates/application.mustache'
 ],
-  function(_, $, moment, Ractive, R1, Highcharts, H1, helpers, tLoading, tTooltip, tApp) {
-
+  function(_, $, moment, Ractive, R1, Highcharts, H1, helpers, routers, tLoading, tTooltip, tApp) {
   // Preprocess some templates
   tTooltip = _.template(tTooltip);
 
@@ -32,18 +31,38 @@ define('minnpost-climate', [
 
     // Starter
     start: function() {
+      // Make dates.  The date property is the date we are looking at
       this.now = moment();
       this.today = moment(this.now.format('YYYY-MM-DD'));
       this.yesterday = moment(this.today).subtract(1, 'days');
+      this.date = moment(this.today);
 
       // We can store all the data in an array of days
       this.days = {};
+
+      // Create router
+      this.router = new routers.AppRouter({ app: this });
+      this.router.start();
+    },
+
+    // Show specific date
+    renderDate: function(date) {
+      this.date = date;
+      this.isToday = (date.isSame(this.today, 'day'));
+
+      // Reset some things
+      if (_.isObject(this.view)) {
+        this.view.teardown();
+        this.days = {};
+      }
 
       // Create view
       this.view = new Ractive({
         el: this.$el,
         template: tApp,
         data: {
+          isToday: this.isToday,
+          date: date,
           options: this.options,
           helpers: helpers
         },
@@ -58,27 +77,30 @@ define('minnpost-climate', [
       }, { init: false, defer: true, context: this });
 
       // Get recent observations
-      this.fetchRecentObservations().done(_.bind(this.dataLoaded, this));
+      this.fetchRecentObservations(date).done(_.bind(this.dataLoaded, this));
+    },
+
+    // Handle general error
+    handleError: function(message) {
+      this.router.routeDefault();
     },
 
     // Data loaded.  We need to know what the max day is that we
     // have before making other decisions
     dataLoaded: function(data) {
+      if (!_.isArray(data) || data.length < 30) {
+        this.handleError('Not enough data found.');
+        return;
+      }
+
       // Determine if we have today's or yesterday's data yet
       var max = _.max(data, function(d, di) {
         return moment(d.date, 'YYYY-MM-DD').unix();
       });
-      if (this.today.isSame(max.date)) {
-        this.isYesterday = false;
+      if (!this.date.isSame(max.date)) {
+        this.date = moment(max.date);
       }
-      else if (this.yesterday.isSame(max.date)) {
-        this.isYesterday = true;
-        this.today = max.date;
-      }
-      this.year = this.today.year();
-
-      // Set some data for views
-      this.view.set('isYesterday', this.isYesterday);
+      this.year = this.date.year();
 
       // Determine season
       this.determineSeason();
@@ -129,13 +151,13 @@ define('minnpost-climate', [
     // Make sections
     createSections: function() {
       var thisApp = this;
-      var startWeek = moment(this.today).subtract(7, 'days');
-      var startMonth = moment(this.today).subtract(30, 'days');
+      var startWeek = moment(this.date).subtract(7, 'days');
+      var startMonth = moment(this.date).subtract(30, 'days');
 
       // Just today
       this.sectionToday = this.computeSection(
         _.filter(this.days, function(d, di) {
-          return d.date.isSame(thisApp.today);
+          return d.date.isSame(thisApp.date);
         })
       );
 
@@ -168,7 +190,7 @@ define('minnpost-climate', [
       this.view.set('sectionMonth', this.sectionMonth);
       this.view.set('sectionSeason', this.sectionSeason);
 
-      // Mark as computer
+      // Mark as computed
       this.view.set('computed', true);
     },
 
@@ -198,11 +220,11 @@ define('minnpost-climate', [
     },
 
     // Fetch data about recent observations
-    fetchRecentObservations: function() {
+    fetchRecentObservations: function(date) {
       var thisApp = this;
       // Currently just use a general amount to ensure we have everything
       // but this could be change to be more accurate
-      var recent = this.now.subtract('months', 5);
+      var recent = moment(this.date).subtract('months', 5);
       var query = [];
 
       query.push("SELECT");
@@ -214,6 +236,7 @@ define('minnpost-climate', [
       query.push("  INNER JOIN normals AS n ON");
       query.push("    o.month = n.month AND o.day = n.day");
       query.push("WHERE o.date > DATE('" + recent.format('YYYY-MM-DD') + "')");
+      query.push("  AND o.date <= DATE('" + this.date.format('YYYY-MM-DD') + "')");
       var url = this.options.dailyObservationsPath.replace('[[[QUERY]]]', encodeURIComponent(query.join(' ')));
 
       // Make request
@@ -230,18 +253,31 @@ define('minnpost-climate', [
       });
     },
 
-    // Determine what season we are in
+    // Determine what season we are in.  This gets a bit messy when
+    // adjusting for the year
     determineSeason: function() {
       var thisApp = this;
-
-      // Adjust the season years
-      // TODO
+      var year = this.date.year();
 
       // Look to see what today is in.
       _.each(this.options.seasons, function(s, si) {
-        if ((thisApp.today.isAfter(s.start) ||
-          thisApp.today.isSame(s.start)) &&
-          thisApp.today.isBefore(s.end)) {
+        s.start.year(year);
+        s.end.year(year);
+
+        // But if winter ...
+        if (si === 'winter') {
+          if (thisApp.date.month() < 6) {
+            s.start.year(year - 1);
+          }
+          else {
+            s.end.year(year + 1);
+          }
+        }
+
+        // Check if within season range
+        if ((thisApp.date.isAfter(s.start) ||
+          thisApp.date.isSame(s.start)) &&
+          thisApp.date.isBefore(s.end)) {
           thisApp.season = si;
         }
       });
@@ -272,7 +308,7 @@ define('minnpost-climate', [
       // We have to determine if the month and day is this
       // year or last
       var date = moment([this.year, m - 1, d]);
-      var year = date.isAfter(this.today) ? this.year - 1 : this.year;
+      var year = date.isAfter(this.date) ? this.year - 1 : this.year;
       return moment([year, m - 1, d]);
     },
 

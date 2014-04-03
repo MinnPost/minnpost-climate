@@ -8,14 +8,17 @@
 
   {{#computed}}
 
+    {{^isToday}}
+      <div class="not-today">
+        Showing weather trends from <strong>{{ date.format('dddd, MMM. Do, YYYY') }}</strong>.
+      </div>
+    {{/isToday}}
+
     <div class="section-section">
-      <h3>
-        {{^isYesterday}} Today {{/isYesterday}}
-        {{#isYesterday}} Yesterday {{/isYesterday}}
-      </h3>
+      <h3>Today</h3>
       <p>
-        {{^isYesterday}} Today's average temperature so far is {{/isYesterday}}
-        {{#isYesterday}} Yesterday's average temperature was {{/isYesterday}}
+        {{#isToday}} Today's average temperature so far is {{/isToday}}
+        {{^isToday}} Today's average temperature was {{/isToday}}
         about
         <strong>
           {{ Math.abs(Math.round(sectionToday.avgTempDiff * 10) / 10) }}&deg;F
@@ -67,7 +70,7 @@
       <p>
         This {{ season }}
         ({{ seasonSpan.start.format('MMM. Do') }} - {{ seasonSpan.end.subtract(1, 'days').format('MMM. DD') }})
-        was, on average, about
+        has been, on average, about
         <strong>
           {{ Math.abs(Math.round(sectionSeason.avgTempDiff * 10) / 10) }}&deg;F
           {{#(sectionSeason.avgTempDiff > 0)}} warmer {{/()}}

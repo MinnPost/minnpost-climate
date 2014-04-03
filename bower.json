@@ -15,8 +15,8 @@
   },
   "dependencies": {
     "jquery": "~1.9",
-    "underscore": "~1.5.2",
-    "backbone": "~1.1.0",
+    "underscore": "~1.6.0",
+    "backbone": "~1.1.2",
     "ractive": "~0.3.9",
     "ractive-backbone": "~0.1.0",
     "ractive-events-tap": "~0.1.0",

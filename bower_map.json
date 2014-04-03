@@ -53,15 +53,6 @@
     ],
     "returns": "RactiveEventsTap"
   },
-  "unsemantic": {
-    "css": [
-      "unsemantic/assets/stylesheets/unsemantic-grid-responsive-tablet"
-    ],
-    "ie": [
-      "unsemantic/assets/stylesheets/ie"
-    ],
-    "rname": "unsemantic"
-  },
   "moment": {
     "rname": "moment",
     "js": [
@@ -76,7 +67,7 @@
     "rname": "Highcharts",
     "returns": "Highcharts"
   },
-  "highcharts": {
+  "HighchartsMore": {
     "js": [
       "highcharts/highcharts-more"
     ],

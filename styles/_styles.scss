@@ -73,12 +73,19 @@ body .node-unpublished {
     }
   }
 
+  .not-today {
+    text-align: center;
+    font-family: $sans-serif-font-other;
+    font-size: 1.5em;
+    margin: 1em 0 2em 0;
+  }
+
   .section-section {
     margin-bottom: 3em;
 
     p {
 	    font-size: 1.3em;
-	    font-family: "Arial Narrow", "Abadi MT Condensed Light", "Helvetica Neue", Arial, sans-serif;
+	    font-family: $sans-serif-font-other;
 	    line-height: 1.5em;
 	    color: #434343;
     }
