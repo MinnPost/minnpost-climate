@@ -1,4 +1,4 @@
-/*! minnpost-climate - LATEST VERSION - 2014-04-03
+/*! minnpost-climate - v0.1.0 - 2014-04-03
 * https://github.com/minnpost/minnpost-climate
 * Copyright (c) 2014 MinnPost; Licensed MIT */
 
