@@ -35,6 +35,7 @@ define('routers', ['jquery', 'underscore', 'Backbone', 'moment'],
         return;
       }
 
+      this.app.refocusView();
       this.app.renderDate(date);
     }
   });

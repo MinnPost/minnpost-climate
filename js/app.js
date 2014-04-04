@@ -339,6 +339,17 @@ define('minnpost-climate', [
       return date.format('YYYYMMDD');
     },
 
+    // Scroll window to top of application.  Do not do it
+    // the first time.
+    refocusView: function() {
+      if (this.refocused) {
+        $('html, body').stop().animate({
+          scrollTop: this.$el.offset().top - 15
+        }, 750);
+      }
+      this.refocused = true;
+    },
+
     // Default options
     defaultOptions: {
       dailyObservationsPath: 'https://premium.scraperwiki.com/d7fssyq/a43576483d6f43a/sql/?callback=?&q=[[[QUERY]]]',
